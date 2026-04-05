@@ -195,6 +195,51 @@ def _build_match_reason(matched_keywords, project_key):
     return f"{kw_str} relevant to {name}"
 
 
+def _recommend(project_key, relevance_score, matched_keywords, post):
+    """
+    Decide: Implement, Watch, or Note.
+
+    Implement = directly useful tool/technique for a specific project.
+    Watch = relevant trend or development worth tracking.
+    Note = tangentially interesting, no immediate action.
+
+    Returns (recommendation, reason) tuple.
+    """
+    title_lower = post.get("title", "").lower()
+    strong_kws = PROJECT_KEYWORDS.get(project_key, {}).get("strong", set())
+    strong_hits = matched_keywords & strong_kws
+
+    # Tool/library signals in the title
+    tool_signals = ["built", "open source", "released", "launched", "library",
+                    "tool", "framework", "template", "starter", "boilerplate",
+                    "sdk", "api", "package", "cli", "plugin"]
+    is_tool = any(sig in title_lower for sig in tool_signals)
+
+    # Discussion-only signals
+    discussion_signals = ["opinion", "thoughts on", "what do you think",
+                          "unpopular opinion", "rant", "discussion", "debate"]
+    is_discussion = any(sig in title_lower for sig in discussion_signals)
+
+    # Implement: specific project + strong keywords + tool-like post
+    if project_key != "general" and strong_hits and is_tool:
+        reason = f"Tool/resource matching {', '.join(sorted(strong_hits)[:2])}. Check if it fits your current stack."
+        return "Implement", reason
+
+    # Implement: very high relevance to a specific project
+    if project_key != "general" and relevance_score >= 0.25 and not is_discussion:
+        reason = f"Strong match to {PROJECT_NAMES.get(project_key, project_key)}. Worth 10 minutes to evaluate."
+        return "Implement", reason
+
+    # Watch: specific project match but lower relevance
+    if project_key != "general" and relevance_score >= 0.08:
+        reason = f"Relevant to {PROJECT_NAMES.get(project_key, project_key)} but not immediately actionable."
+        return "Watch", reason
+
+    # Note: general interest only
+    reason = "General industry signal. No project-specific action needed."
+    return "Note", reason
+
+
 def match(skip_scan=False, cached_posts=None):
     """
     Run the full Reddit matching pipeline.
@@ -230,6 +275,8 @@ def match(skip_scan=False, cached_posts=None):
 
         best_proj, best_score, best_keywords = project_matches[0]
 
+        rec, rec_reason = _recommend(best_proj, best_score, best_keywords, post)
+
         matched.append({
             "title": post.get("title", ""),
             "url": post.get("url", ""),
@@ -243,6 +290,8 @@ def match(skip_scan=False, cached_posts=None):
             "matched_keywords": list(best_keywords),
             "combined_score": round(best_score * 0.6 + post.get("quality", 0) * 0.4, 4),
             "id": post.get("url", ""),
+            "recommendation": rec,
+            "rec_reason": rec_reason,
         })
 
     # Sort by combined score

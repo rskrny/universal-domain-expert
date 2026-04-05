@@ -92,16 +92,19 @@ def _save_local_briefing(deadlines, matches, stats):
         lines.append("No deadlines within 14 days.")
         lines.append("")
 
-    # Reddit matches
+    # Reddit matches with recommendations
     if matches:
-        lines.append("## Relevant Discoveries")
+        lines.append("## Discoveries")
         for m in matches:
-            lines.append(f"- [{m['title'][:80]}]({m['url']})")
+            rec = m.get("recommendation", "Note")
+            rec_reason = m.get("rec_reason", "")
+            lines.append(f"- **{rec}**: [{m['title'][:80]}]({m['url']})")
             lines.append(f"  -> {m['matched_project']}: {m['match_reason']}")
-            lines.append(f"  Quality: {m['quality']:.2f} | Relevance: {m['relevance']:.2f} | Combined: {m['combined_score']:.2f}")
+            if rec_reason:
+                lines.append(f"  Action: {rec_reason}")
         lines.append("")
     else:
-        lines.append("## Relevant Discoveries")
+        lines.append("## Discoveries")
         lines.append("No Reddit posts matched active projects today.")
         lines.append("")
 
@@ -148,7 +151,7 @@ def run(skip_reddit=False, skip_lark=False):
     print("=" * 50)
 
     # 1. Scan deadlines
-    print("  [1/4] Scanning deadlines...")
+    print("  [1/5] Scanning deadlines...")
     deadlines = deadline_scanner.scan()
     if deadlines:
         print(f"        {len(deadlines)} deadline(s) found")
@@ -158,26 +161,36 @@ def run(skip_reddit=False, skip_lark=False):
     # 2. Match Reddit posts to projects
     matches = []
     if not skip_reddit:
-        print("  [2/4] Scanning Reddit + matching to projects...")
+        print("  [2/5] Scanning Reddit + matching to projects...")
         matches = reddit_matcher.match()
         if matches:
             print(f"        {len(matches)} post(s) matched to projects")
         else:
             print("        No project-relevant posts found")
     else:
-        print("  [2/4] Reddit skipped (--no-reddit)")
+        print("  [2/5] Reddit skipped (--no-reddit)")
 
     # 3. System stats
-    print("  [3/4] Checking system health...")
+    print("  [3/5] Checking system health...")
     stats = _get_system_stats()
 
-    # 4. Build and deliver
-    print("  [4/4] Building briefing...")
+    # 4. Compute deltas and build
+    print("  [4/5] Computing deltas...")
+    deltas = state_tracker.compute_deltas(deadlines, matches, stats)
+    if deltas.get("is_first_run"):
+        print("        First run, no previous state to compare")
+    else:
+        new_r = len(deltas.get("new_reddit", []))
+        ret_r = len(deltas.get("returning_reddit", []))
+        new_d = len(deltas.get("new_deadlines", []))
+        print(f"        {new_r} new posts, {ret_r} returning, {new_d} new deadlines")
 
-    # Build card
-    card = lark_cards.build_morning_intel(deadlines, matches, stats)
+    print("  [5/5] Building briefing...")
 
-    # Save state for delta computation
+    # Build card with delta awareness
+    card = lark_cards.build_morning_intel(deadlines, matches, stats, deltas=deltas)
+
+    # Save state AFTER building (so next run compares against this one)
     state_tracker.save(deadlines, matches, stats)
 
     # Save local markdown

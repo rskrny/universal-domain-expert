@@ -53,22 +53,30 @@ def _format_deadlines(deadlines):
     return "\n".join(lines)
 
 
+def _rec_icon(rec):
+    """Emoji prefix for recommendation level."""
+    return {"Implement": ">>", "Watch": ">", "Note": "-"}.get(rec, "-")
+
+
 def _format_reddit_matches(matches):
-    """Format matched Reddit posts as lark_md text."""
+    """Format matched Reddit posts as lark_md text with actionable recommendations."""
     if not matches:
         return None
 
-    lines = ["**Relevant Discoveries**"]
+    lines = ["**Discoveries**"]
     for m in matches[:5]:
-        title = m["title"][:70]
-        project = m["matched_project"]
-        reason_keywords = ", ".join(m.get("matched_keywords", [])[:3])
+        title = m["title"][:65]
         url = m["url"]
-        lines.append(f"[{title}]({url})")
-        lines.append(f"  -> {project}: {reason_keywords}")
+        rec = m.get("recommendation", "Note")
+        rec_reason = m.get("rec_reason", "")
+        icon = _rec_icon(rec)
+
+        lines.append(f"{icon} **{rec}**: [{title}]({url})")
+        if rec_reason:
+            lines.append(f"   {rec_reason}")
 
     if len(matches) > 5:
-        lines.append(f"  + {len(matches) - 5} more matched posts")
+        lines.append(f"+ {len(matches) - 5} more")
 
     return "\n".join(lines)
 
@@ -87,9 +95,16 @@ def _format_system_pulse(stats):
     return "**System** | " + " | ".join(parts)
 
 
-def build_morning_intel(deadlines, reddit_matches, system_stats=None):
+def build_morning_intel(deadlines, reddit_matches, system_stats=None, deltas=None):
     """
     Build the morning intelligence card.
+
+    Args:
+        deadlines: All current deadlines
+        reddit_matches: All matched Reddit posts (with recommendation fields)
+        system_stats: System health metrics
+        deltas: Output from state_tracker.compute_deltas(). If provided,
+                new items are highlighted and returning items are condensed.
 
     Returns a Lark interactive card dict ready for send_message().
     """
@@ -101,27 +116,91 @@ def build_morning_intel(deadlines, reddit_matches, system_stats=None):
     # Build card elements
     elements = []
 
+    # Delta summary line (if we have prior state to compare)
+    if deltas and not deltas.get("is_first_run"):
+        delta_parts = []
+        new_r = len(deltas.get("new_reddit", []))
+        if new_r:
+            delta_parts.append(f"{new_r} new discovery(s)")
+        new_d = len(deltas.get("new_deadlines", []))
+        if new_d:
+            delta_parts.append(f"{new_d} new deadline(s)")
+        dl_change = deltas.get("deadline_changes")
+        if dl_change and not new_d:
+            delta_parts.append(dl_change)
+
+        if delta_parts:
+            elements.append({
+                "tag": "div",
+                "text": {"tag": "lark_md", "content": "**Changes:** " + " | ".join(delta_parts)},
+            })
+        else:
+            elements.append({
+                "tag": "div",
+                "text": {"tag": "lark_md", "content": "No changes since last briefing."},
+            })
+            color = "green"
+
     # Section 1: Deadlines (only if any exist)
     deadline_text = _format_deadlines(deadlines)
     if deadline_text:
+        if elements:
+            elements.append({"tag": "hr"})
         elements.append({
             "tag": "div",
             "text": {"tag": "lark_md", "content": deadline_text},
         })
 
-    # Section 2: Reddit Intelligence (only if matches exist)
-    reddit_text = _format_reddit_matches(reddit_matches)
-    if reddit_text:
-        if elements:
-            elements.append({"tag": "hr"})
-        elements.append({
-            "tag": "div",
-            "text": {"tag": "lark_md", "content": reddit_text},
-        })
+    # Section 2: New discoveries first, then returning
+    if deltas and not deltas.get("is_first_run"):
+        new_reddit = deltas.get("new_reddit", [])
+        returning = deltas.get("returning_reddit", [])
 
-    # Section 3: System pulse (compact)
+        if new_reddit:
+            new_text = _format_reddit_matches(new_reddit)
+            if new_text:
+                if elements:
+                    elements.append({"tag": "hr"})
+                elements.append({
+                    "tag": "div",
+                    "text": {"tag": "lark_md", "content": new_text},
+                })
+
+        if returning:
+            # Compact list for items already seen
+            ret_lines = [f"**Still relevant** ({len(returning)})"]
+            for m in returning[:3]:
+                title = m["title"][:50]
+                ret_lines.append(f"- {m.get('recommendation', 'Note')}: {title}")
+            if elements:
+                elements.append({"tag": "hr"})
+            elements.append({
+                "tag": "div",
+                "text": {"tag": "lark_md", "content": "\n".join(ret_lines)},
+            })
+    else:
+        # First run or no delta data: show all matches
+        reddit_text = _format_reddit_matches(reddit_matches)
+        if reddit_text:
+            if elements:
+                elements.append({"tag": "hr"})
+            elements.append({
+                "tag": "div",
+                "text": {"tag": "lark_md", "content": reddit_text},
+            })
+
+    # Section 3: System pulse (compact, with delta if available)
     if system_stats:
         pulse_text = _format_system_pulse(system_stats)
+        if deltas and deltas.get("stats_delta"):
+            sd = deltas["stats_delta"]
+            delta_parts = []
+            if sd.get("chunks"):
+                delta_parts.append(f"chunks {'+' if sd['chunks'] > 0 else ''}{sd['chunks']}")
+            if sd.get("queries"):
+                delta_parts.append(f"queries {'+' if sd['queries'] > 0 else ''}{sd['queries']}")
+            if delta_parts and pulse_text:
+                pulse_text += " (" + ", ".join(delta_parts) + ")"
         if pulse_text:
             if elements:
                 elements.append({"tag": "hr"})
@@ -134,7 +213,7 @@ def build_morning_intel(deadlines, reddit_matches, system_stats=None):
     if not elements:
         elements.append({
             "tag": "div",
-            "text": {"tag": "lark_md", "content": "All clear. No deadlines. No matched discoveries. Good day for deep work."},
+            "text": {"tag": "lark_md", "content": "All clear. No deadlines. No new discoveries. Good day for deep work."},
         })
         color = "green"
 
