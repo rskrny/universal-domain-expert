@@ -1,50 +1,25 @@
-# Daily Briefing -- Sunday, April 05, 2026
+# Intelligence Briefing | Sunday, April 05, 2026
+> Generated 10:06 AM HST
 
----
+## Action Required
+No deadlines within 14 days.
 
-> Generated 09:08 AM HST
+## Relevant Discoveries
+- [Factory worker builds 205K LOC MES system with Claude Code  solo dev, no CS degr](https://reddit.com/r/vibecoding/comments/1sd7bux/factory_worker_builds_205k_loc_mes_system_with/)
+  -> general: typescript, claude, react relevant to general
+  Quality: 1.00 | Relevance: 0.10 | Combined: 0.46
+- [Karpathy said “there is room for an incredible new product” for LLM knowledge ba](https://reddit.com/r/AI_Agents/comments/1sdbfou/karpathy_said_there_is_room_for_an_incredible_new/)
+  -> general: workflow, claude, llm relevant to general
+  Quality: 1.00 | Relevance: 0.07 | Combined: 0.44
+- [Solving the "UI-to-API" Gap: A Universal MCP Gateway for Any Website](https://reddit.com/r/AI_Agents/comments/1scx7td/solving_the_uitoapi_gap_a_universal_mcp_gateway/)
+  -> general: agents, agent, mcp relevant to general
+  Quality: 1.00 | Relevance: 0.07 | Combined: 0.44
+- [OpenAI's GPT-5.4 got blocked by safety mechanisms 5 times, searched my machine f](https://reddit.com/r/AIAgentsInAction/comments/1sd7u6n/openais_gpt54_got_blocked_by_safety_mechanisms_5/)
+  -> general: workflow, openai, claude relevant to general
+  Quality: 1.00 | Relevance: 0.07 | Combined: 0.44
+- [code intelligence for 248 languages (made with agents in mind) and much more in ](https://reddit.com/r/AI_Agents/comments/1scvh5t/code_intelligence_for_248_languages_made_with/)
+  -> general: typescript, python, agents relevant to general
+  Quality: 0.99 | Relevance: 0.07 | Combined: 0.44
 
-
----
-
-## Deadline Alerts
-No deadlines within 30 days.
-
----
-
-## Project Status
-1. Bloodline Charters - fishingbloodline.com, Next.js. **Path: GES/clients/bloodline/** (migrated Apr 3)
-2. Pepper's OpenClaw Bot - Telegram bot on Hostinger VPS. OAuth expires every 10 days. Needs monitoring.
-3. The Flip Side - BrandPal Media Matrix. 3 IPs, 7 phases through July 2026. EP-001 editing Apr 9-17. Editor joining Apr 7.
-4. Goldie Group - AI email triage. **$10K accepted** (down from $12K). Waiting on Kenny's procurement process and Sal's email categories. **Path: GES/clients/goldie-group/**
-5. AutomateShortVids SMR - Video pipeline for ShopMyRoom. Hero video approved. Testing next.
-6. Turboquant/Domain Expert - LinkedIn launch. **LinkedIn OAuth complete** (token expires ~June 2026). Social engine operational. Post 1 ready, 5 more planned.
-7. AI Beginner Course - "AI for the Rest of Us". 8-stage pipeline. Content development.
-8. SMR Compute Bot - Cloud vs hardware cost optimizer for ShopMyRoom AI pipelines.
-9. Sullivan Auctioneers - 3 opportunities. **NH Tax Deed site rebuild: PROPOSAL READY with pricing ($2K/$2.8K).** Full mockup (homepage + RiverWalk detail page with 26 photos). SEO proposal already sent to Marianne Apr 4 (no price). NH Tax Deed team is Rick and Weston SAGER (not Sullivan). Ryan to send proposal + mockup to Marianne. **Path: GES/clients/sullivan-auctioneers/**
-10. Habitat Homeostasis - Isaac Humble's sustainability startup. 6-person team. Climate analysis.
-11. PetPhone Ad Copy - GlocalMe product localization. Delivered 2026-03-31.
-- Tax 2025 filing - **PAID $4,657 on Apr 4.** Forms ready. **MUST MAIL BY JUN 15.** Print, sign, certified mail to Charlotte NC.
-- Pepper crypto PP-001 - COMPLETE (33K CNY delivered Apr 3). PP-002 scheduled week of Apr 7.
-
----
-
-## Reddit Intelligence
-Skipped (--no-reddit flag).
-
----
-
-## Lark Messages
-No recent Lark messages.
-
----
-
-## System Health
-Knowledge index: 11,487 chunks
-Routing log: 124 queries (44 routed)
-Reddit ingested: 25 posts
-
----
-
-## Recommended Actions
-  1. STANDING: Tax return needs printing, signing, and mailing by June 15
+## System Pulse
+Knowledge: 11,487 chunks | Routing: 127 queries (44 routed)

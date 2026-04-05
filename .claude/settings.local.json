@@ -37,7 +37,9 @@
       "mcp__ad76b29f-f73a-4278-9d44-127f66da3da8__send_lark_message",
       "mcp__mcp-registry__search_mcp_registry",
       "mcp__minimax__text_to_image",
-      "mcp__d5eaaf22-c437-41b3-a570-d7ec40572f60__d1_databases_list"
+      "mcp__d5eaaf22-c437-41b3-a570-d7ec40572f60__d1_databases_list",
+      "mcp__Windows-MCP__Screenshot",
+      "mcp__Windows-MCP__App"
     ]
   },
   "hooks": {
