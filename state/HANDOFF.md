@@ -49,12 +49,12 @@ Persistent vision document tracking evolution from reactive domain expert to pro
 ## System State (Verified)
 
 - **Git:** master branch, origin configured and pushed, working tree clean
-- **Neural router:** Trained, 78 domains, hybrid scoring active
-- **Orchestrator:** Operational, 8 initial recommendations logged
+- **Neural router:** Retrained (78.1% accuracy, up from 76.9%), 145+ log entries
+- **Orchestrator:** Operational, noise fixed. Clean output: Goldie $10K, Sullivan $2K, Bloodline vulns
 - **Intelligence briefing:** Phase 2 + orchestrator integration working
 - **Lark delivery:** Card format with action plan section added
 - **Index:** 11,487 chunks, 78 domains
-- **Routing log:** 145+ queries (50 routed)
+- **Routing log:** 147+ queries (52 routed)
 - **Memory:** 36 files
 - **Action log:** 8 entries (all pending, act rate TBD)
 - **Scheduled tasks:** daily-briefing active
@@ -63,13 +63,13 @@ Persistent vision document tracking evolution from reactive domain expert to pro
 
 ## Known Issues
 
-1. **Deadline detection noise.** The project_scanner picks up some metadata dates as deadlines (e.g., "Team Changes (2026-04-03)" matches because "Joining" is a deadline signal). Needs context-aware filtering.
+1. **50 of 78 domains have zero context files.** Knowledge quality uneven.
 
-2. **50 of 78 domains have zero context files.** Knowledge quality uneven.
+2. **main vs master branches on GitHub.** Remote has both. Should consolidate eventually.
 
-3. **main vs master branches on GitHub.** Remote has both. Should consolidate eventually.
+3. **Neural router word-vector averaging limitations.** Compound concepts split into individual words. Hybrid keyword system compensates.
 
-4. **Neural router word-vector averaging limitations.** Compound concepts split into individual words. Hybrid keyword system compensates.
+4. **r/complexity returns 404.** Reddit scanner logs warning but continues. Non-blocking.
 
 ---
 
@@ -83,7 +83,7 @@ Persistent vision document tracking evolution from reactive domain expert to pro
 ### Jarvis M2: Session Intelligence
 - [ ] Make orchestrator run at session start automatically
 - [ ] Present today's plan as the first thing Ryan sees (no manual bootstrap needed)
-- [ ] Improve deadline detection to reduce false positives
+- [x] Improve deadline detection to reduce false positives (DONE this session)
 
 ### System Quality
 - [ ] Fill context for most-used domains (real-estate, negotiation, sales, video-production, saas-building)
