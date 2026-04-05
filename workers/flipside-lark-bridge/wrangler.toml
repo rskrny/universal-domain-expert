@@ -1,0 +1,25 @@
+name = "flipside-lark-bridge"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Cron trigger — checks D1 for new briefings every 5 minutes
+[triggers]
+crons = ["*/5 * * * *"]
+
+# Custom domain for Feishu webhook access (workers.dev blocked from China)
+[[routes]]
+pattern = "feishu.hanahaulers.com"
+custom_domain = true
+
+# D1 database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "flipside-briefings"
+database_id = "961c5503-b1fc-4047-8a20-6885eb70265b"
+
+# Secrets (set via: npx wrangler secret put LARK_APP_ID, etc.)
+# LARK_APP_ID
+# LARK_APP_SECRET
+# LARK_CHAT_ID
+# AUTH_TOKEN

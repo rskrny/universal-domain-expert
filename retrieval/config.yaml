@@ -1,0 +1,164 @@
+# Context Engineering Retrieval System Configuration
+#
+# These are the defaults. Override any value here.
+# Rebuild the index after changing: python scripts/reindex.py
+
+# Directories to index (relative to project root)
+index_dirs:
+  - prompts/context
+  - prompts/domains
+
+# File patterns (supports markdown, code, structured data, HTML, PDF, DOCX)
+include_patterns:
+  - "*.md"
+  - "*.txt"
+  - "*.py"
+  - "*.js"
+  - "*.ts"
+  - "*.json"
+  - "*.yaml"
+  - "*.yml"
+  - "*.html"
+  - "*.csv"
+  - "*.pdf"
+  - "*.docx"
+
+exclude_patterns:
+  - INDEX.md
+  - TEMPLATE.md
+  - "archive/*"
+  - "__pycache__/*"
+  - "node_modules/*"
+  - "*.min.js"
+  - "*.min.css"
+
+# Chunking
+chunk_max_tokens: 512
+chunk_overlap_tokens: 64
+split_on_headers: true
+min_chunk_length: 50
+
+# BM25 tuning
+bm25_k1: 1.5
+bm25_b: 0.75
+
+# Semantic search
+embedding_model: all-MiniLM-L6-v2
+embedding_dim: 384
+use_semantic: true
+
+# Search defaults
+default_top_k: 10
+bm25_weight: 0.4
+semantic_weight: 0.6
+rerank_top_n: 20
+
+# Domain alias mapping
+# Maps variant names to canonical domain file names.
+# Applied at index time so chunks always get canonical domain tags.
+# Also used by ingestion pipeline to prevent orphan directories.
+domain_aliases:
+  # Exact duplicates (different naming conventions)
+  software-development: software-dev
+  e-commerce: ecommerce
+  sales-and-closing: sales
+  career-guidance: career-development
+  energy-storage: energy-systems
+  fitness-training: nutrition-fitness
+  education-learning: education
+  education-policy: education-pedagogy
+  content-creation: marketing-content
+  political-analysis: political-science
+  data-analysis: data-analytics
+  data-visualization: data-analytics
+  productivity-software: productivity
+  professional-development: career-development
+  grammar-language: linguistics
+
+  # Medical specialties -> medicine-health
+  healthcare: medicine-health
+  healthcare-medical: medicine-health
+  immunotherapy: medicine-health
+  oncology: medicine-health
+  pharmacology: medicine-health
+  sports-medicine: medicine-health
+
+  # Psychology variants -> psychology-persuasion
+  cognitive-psychology: psychology-persuasion
+  psychology: psychology-persuasion
+
+  # Mental health variants
+  mental-health-psychiatry: mental-health
+
+  # Neuroscience variants
+  neuroscience-psychopharmacology: neuroscience
+
+  # Self-help variants -> productivity
+  self-help: productivity
+  self-help-personal-development: productivity
+  self-improvement: productivity
+
+  # Social/dating variants -> psychology-persuasion (closest fit)
+  dating-apps: psychology-persuasion
+  dating-relationships: psychology-persuasion
+  dating-seduction: psychology-persuasion
+  dating-social-dynamics: psychology-persuasion
+  social-dynamics: psychology-persuasion
+  social-skills: psychology-persuasion
+  interpersonal-communication: psychology-persuasion
+
+  # Finance variants
+  corporate-finance: personal-finance
+  cryptocurrency-investing: blockchain-web3
+  day-trading: personal-finance
+  finance-crime: business-law
+  finance-trading: personal-finance
+  quantitative-finance: personal-finance
+  tax-finance: accounting-tax
+  mergers-acquisitions: business-consulting
+
+  # Consumer variants -> economics
+  consumer-behavior: economics
+  consumer-economics: economics
+  consumer-services: economics
+  consumer-tips: economics
+
+  # Tech/ops variants
+  digital-privacy: cybersecurity
+  digital-tools: operations-automation
+  systems-administration: cloud-infrastructure
+  privacy-security: cybersecurity
+  platform-moderation: cybersecurity
+
+  # Legal variants
+  labor-law: employment-law
+  legal-services: business-law
+
+  # Other
+  home-living: operations-automation
+  travel-planning: operations-automation
+  community-building: social-media
+  filmmaking: video-production
+  animal-behavior: neuroscience
+  biology-genetics: medicine-health
+  chemistry: environmental-science
+  climate-policy: environmental-science
+  public-health: medicine-health
+  public-policy: political-science
+  health-wellness: nutrition-fitness
+  internet-policy: political-science
+  organizational-management: operations-automation
+  ai-classification: ai-machine-learning
+  ai-ml-engineering: ai-machine-learning
+  ai-video-production: video-production
+  client-communication: sales
+  client-management: sales
+  document-design: document-production
+  financial-ops: accounting-tax
+  goldie-group: operations-automation
+  hiring-hr: hr-talent
+  product-strategy: product-design
+  security-compliance: cybersecurity
+  translation-localization: linguistics
+  language-learning: linguistics
+  physics: mathematics

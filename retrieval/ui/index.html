@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knowledge Command Center</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0d1117; --surface: #161b22; --border: #30363d;
+  --text: #e6edf3; --text-dim: #8b949e; --accent: #58a6ff;
+  --green: #3fb950; --red: #f85149; --orange: #d29922; --purple: #bc8cff;
+}
+body {
+  font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.5;
+  overflow-x: hidden;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Layout */
+.header {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 12px 24px; display: flex; align-items: center; gap: 16px;
+  position: sticky; top: 0; z-index: 100;
+}
+.header h1 { font-size: 16px; font-weight: 600; white-space: nowrap; }
+.header .stats { font-size: 12px; color: var(--text-dim); display: flex; gap: 12px; }
+.header .stats span { display: inline-flex; align-items: center; gap: 4px; }
+.header .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+.header .dot.green { background: var(--green); }
+.header .dot.orange { background: var(--orange); }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 20px 24px; }
+
+/* Search */
+.search-box {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  padding: 16px; margin-bottom: 20px;
+}
+.search-row { display: flex; gap: 8px; align-items: center; }
+.search-input {
+  flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text); padding: 10px 14px; font-size: 14px; outline: none;
+}
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--text-dim); }
+.btn {
+  background: var(--accent); color: #fff; border: none; border-radius: 6px;
+  padding: 10px 16px; font-size: 13px; cursor: pointer; font-weight: 500;
+  white-space: nowrap;
+}
+.btn:hover { opacity: 0.9; }
+.btn.secondary { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+.btn.secondary:hover { background: var(--border); }
+.search-meta { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+.search-meta select {
+  background: var(--bg); color: var(--text); border: 1px solid var(--border);
+  border-radius: 4px; padding: 4px 8px; font-size: 12px;
+}
+.search-meta label { font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 4px; }
+.search-meta input[type=checkbox] { accent-color: var(--accent); }
+.kbd { background: var(--border); border-radius: 3px; padding: 1px 5px; font-size: 11px; color: var(--text-dim); font-family: monospace; }
+
+/* Results */
+.results { margin-bottom: 24px; }
+.result-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  padding: 14px 16px; margin-bottom: 8px; transition: border-color 0.15s;
+}
+.result-card:hover { border-color: var(--accent); }
+.result-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.result-label { font-size: 13px; font-weight: 500; color: var(--accent); }
+.result-domain {
+  font-size: 11px; padding: 2px 8px; border-radius: 10px;
+  background: rgba(88,166,255,0.1); color: var(--accent); white-space: nowrap;
+}
+.result-text {
+  font-size: 13px; color: var(--text-dim); margin-top: 6px;
+  overflow: hidden; max-height: 80px; line-height: 1.4;
+}
+.result-text.expanded { max-height: none; }
+.result-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.result-score { font-size: 11px; color: var(--text-dim); font-family: monospace; }
+.feedback-btns { display: flex; gap: 4px; }
+.fb-btn {
+  width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border);
+  background: transparent; cursor: pointer; font-size: 14px; display: flex;
+  align-items: center; justify-content: center; transition: all 0.15s;
+}
+.fb-btn:hover { background: var(--border); }
+.fb-btn.active-up { background: rgba(63,185,80,0.2); border-color: var(--green); color: var(--green); }
+.fb-btn.active-down { background: rgba(248,81,73,0.2); border-color: var(--red); color: var(--red); }
+.expand-btn {
+  background: none; border: none; color: var(--text-dim); cursor: pointer;
+  font-size: 11px; padding: 2px 6px;
+}
+.expand-btn:hover { color: var(--text); }
+
+/* Grid panels */
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+@media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+.panel {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  padding: 16px;
+}
+.panel h2 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); margin-bottom: 12px; }
+.panel-number { font-size: 28px; font-weight: 700; }
+.panel-label { font-size: 12px; color: var(--text-dim); }
+
+/* Domain list */
+.domain-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+}
+.domain-item:last-child { border-bottom: none; }
+.domain-bar {
+  height: 4px; border-radius: 2px; background: var(--accent); display: inline-block;
+  vertical-align: middle; margin-left: 8px;
+}
+.difficulty-bar { background: var(--orange); }
+
+/* Reddit feed */
+.reddit-item { padding: 8px 0; border-bottom: 1px solid var(--border); }
+.reddit-item:last-child { border-bottom: none; }
+.reddit-title { font-size: 13px; }
+.reddit-meta { font-size: 11px; color: var(--text-dim); }
+
+/* Status indicators */
+.status-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+
+/* Tabs */
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+.tab {
+  padding: 8px 16px; font-size: 13px; color: var(--text-dim); cursor: pointer;
+  border-bottom: 2px solid transparent; background: none; border-top: none;
+  border-left: none; border-right: none; font-family: inherit;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Toast notification */
+.toast {
+  position: fixed; bottom: 20px; right: 20px; background: var(--surface);
+  border: 1px solid var(--green); border-radius: 8px; padding: 10px 16px;
+  font-size: 13px; z-index: 200; transform: translateY(80px); opacity: 0;
+  transition: all 0.3s ease;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Knowledge Command Center</h1>
+  <div class="stats" id="headerStats">
+    <span><span class="dot green"></span> Loading...</span>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Search -->
+  <div class="search-box">
+    <div class="search-row">
+      <input class="search-input" id="searchInput" type="text" placeholder="Search knowledge base... (Ctrl+K)" autofocus>
+      <button class="btn" onclick="doSearch()">Search</button>
+      <button class="btn secondary" onclick="doSearch(true)">Expand</button>
+    </div>
+    <div class="search-meta">
+      <select id="domainFilter"><option value="">All domains</option></select>
+      <label><input type="checkbox" id="expandToggle"> Multi-query expansion</label>
+      <span style="flex:1"></span>
+      <span class="kbd">Ctrl+K</span> search
+      <span class="kbd">Ctrl+E</span> expand
+    </div>
+  </div>
+
+  <div class="results" id="results"></div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="overview">Overview</button>
+    <button class="tab" data-tab="domains">Domains</button>
+    <button class="tab" data-tab="gaps">Knowledge Gaps</button>
+    <button class="tab" data-tab="reddit">Reddit Feed</button>
+    <button class="tab" data-tab="feedback">Feedback</button>
+  </div>
+
+  <!-- Overview Tab -->
+  <div class="tab-content active" id="tab-overview">
+    <div class="grid">
+      <div class="panel">
+        <h2>Knowledge Base</h2>
+        <div class="panel-number" id="totalChunks">--</div>
+        <div class="panel-label">chunks indexed</div>
+        <div style="margin-top:12px">
+          <div class="status-row"><span>Domains</span><span id="domainCount">--</span></div>
+          <div class="status-row"><span>Files</span><span id="fileCount">--</span></div>
+          <div class="status-row"><span>Total tokens</span><span id="totalTokens">--</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Learning Status</h2>
+        <div class="status-row"><span>Feedback entries</span><span id="feedbackCount">0</span></div>
+        <div class="status-row"><span>Routing log entries</span><span id="routingCount">0</span></div>
+        <div class="status-row"><span>Neural router</span><span id="neuralStatus">Not ready</span></div>
+        <div style="margin-top:12px">
+          <div class="panel-label" id="neuralProgress"></div>
+          <div style="background:var(--border);height:6px;border-radius:3px;margin-top:4px">
+            <div id="neuralBar" style="background:var(--accent);height:100%;border-radius:3px;width:0;transition:width 0.3s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Top Connected Domains (Graph Hubs)</h2>
+      <div id="graphHubs"></div>
+    </div>
+  </div>
+
+  <!-- Domains Tab -->
+  <div class="tab-content" id="tab-domains">
+    <div class="panel">
+      <h2>All Domains by Token Count</h2>
+      <div id="domainList"></div>
+    </div>
+  </div>
+
+  <!-- Gaps Tab -->
+  <div class="tab-content" id="tab-gaps">
+    <div class="grid">
+      <div class="panel">
+        <h2>Domain Difficulty Ranking</h2>
+        <div class="panel-label" style="margin-bottom:8px">Higher = system struggles more. Indicates knowledge gaps.</div>
+        <div id="difficultyList"></div>
+      </div>
+      <div class="panel">
+        <h2>Hardest Recent Queries</h2>
+        <div class="panel-label" style="margin-bottom:8px">Queries where retrieval confidence was low.</div>
+        <div id="hardQueries"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reddit Tab -->
+  <div class="tab-content" id="tab-reddit">
+    <div class="panel">
+      <h2>Recent Reddit Saves (Last 30 Days)</h2>
+      <div id="redditFeed">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Feedback Tab -->
+  <div class="tab-content" id="tab-feedback">
+    <div class="panel">
+      <h2>Feedback Overview</h2>
+      <div id="feedbackDetails">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';  // Same origin
+
+// --- Utilities ---
+function $(sel) { return document.querySelector(sel); }
+function $$(sel) { return document.querySelectorAll(sel); }
+function fmt(n) { return n ? n.toLocaleString() : '0'; }
+
+function toast(msg) {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+async function api(path) {
+  const res = await fetch(API + path);
+  return res.json();
+}
+
+async function apiPost(path, body) {
+  const res = await fetch(API + path, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body),
+  });
+  return res.json();
+}
+
+// --- Search ---
+let lastQuery = '';
+
+async function doSearch(forceExpand) {
+  const q = $('#searchInput').value.trim();
+  if (!q) return;
+  lastQuery = q;
+
+  const domain = $('#domainFilter').value;
+  const expand = forceExpand || $('#expandToggle').checked;
+  const domainParam = domain ? `&domain=${encodeURIComponent(domain)}` : '';
+  const expandParam = expand ? '&expand=true' : '';
+
+  $('#results').innerHTML = '<div style="color:var(--text-dim);padding:12px">Searching...</div>';
+
+  const data = await api(`/api/search?q=${encodeURIComponent(q)}&k=10${domainParam}${expandParam}`);
+
+  if (!data.results || data.results.length === 0) {
+    $('#results').innerHTML = '<div style="color:var(--text-dim);padding:12px">No results found.</div>';
+    return;
+  }
+
+  let html = '';
+  for (const r of data.results) {
+    const preview = r.text.replace(/</g, '&lt;').replace(/\n/g, ' ').slice(0, 300);
+    const fullText = r.full_text.replace(/</g, '&lt;').replace(/\n/g, '<br>');
+    const ranks = [];
+    if (r.bm25_rank != null) ranks.push(`BM25:#${r.bm25_rank + 1}`);
+    if (r.semantic_rank != null) ranks.push(`Sem:#${r.semantic_rank + 1}`);
+
+    html += `
+    <div class="result-card" data-chunk-id="${r.chunk_id}">
+      <div class="result-header">
+        <div class="result-label">${r.context_label}</div>
+        ${r.domain ? `<span class="result-domain">${r.domain}</span>` : ''}
+      </div>
+      <div class="result-text" id="text-${r.chunk_id}">${preview}${r.full_text.length > 300 ? '...' : ''}</div>
+      <div class="result-footer">
+        <div class="result-score">${r.score.toFixed(5)} | ${ranks.join(' ')}</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="expand-btn" onclick="toggleExpand(${r.chunk_id}, '${encodeURIComponent(fullText)}')">expand</button>
+          <div class="feedback-btns">
+            <button class="fb-btn" onclick="sendFeedback(${r.chunk_id}, 1, this)" title="Helpful">+</button>
+            <button class="fb-btn" onclick="sendFeedback(${r.chunk_id}, -1, this)" title="Not helpful">-</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+  $('#results').innerHTML = html;
+}
+
+function toggleExpand(chunkId, encodedText) {
+  const el = $(`#text-${chunkId}`);
+  if (el.classList.contains('expanded')) {
+    el.classList.remove('expanded');
+    el.style.maxHeight = '80px';
+  } else {
+    el.innerHTML = decodeURIComponent(encodedText);
+    el.classList.add('expanded');
+    el.style.maxHeight = 'none';
+  }
+}
+
+async function sendFeedback(chunkId, rating, btn) {
+  await apiPost('/api/feedback', { chunk_id: chunkId, query: lastQuery, rating });
+  // Visual feedback
+  const btns = btn.parentElement.querySelectorAll('.fb-btn');
+  btns.forEach(b => b.className = 'fb-btn');
+  btn.classList.add(rating > 0 ? 'active-up' : 'active-down');
+  toast(`Feedback recorded: ${rating > 0 ? 'helpful' : 'not helpful'}`);
+  loadFeedbackStats();
+}
+
+// --- Load Data ---
+async function loadStats() {
+  const data = await api('/api/stats');
+  $('#totalChunks').textContent = fmt(data.total_chunks);
+  $('#domainCount').textContent = fmt(data.domain_count);
+  $('#fileCount').textContent = fmt(data.file_count);
+  $('#totalTokens').textContent = fmt(data.total_tokens);
+  $('#feedbackCount').textContent = fmt(data.feedback_count);
+  $('#routingCount').textContent = fmt(data.routing_log_count);
+
+  const ready = data.neural_router_ready;
+  $('#neuralStatus').innerHTML = ready
+    ? '<span style="color:var(--green)">Ready to train</span>'
+    : '<span style="color:var(--orange)">Collecting data</span>';
+  const pct = Math.min(100, (data.routing_log_count / 50) * 100);
+  $('#neuralBar').style.width = pct + '%';
+  $('#neuralProgress').textContent = `${data.routing_log_count}/50 routing entries (${Math.round(pct)}%)`;
+
+  // Header stats
+  $('#headerStats').innerHTML = `
+    <span><span class="dot green"></span> ${fmt(data.total_chunks)} chunks</span>
+    <span>${fmt(data.domain_count)} domains</span>
+    <span>${fmt(data.feedback_count)} feedback</span>
+  `;
+
+  // Domain list
+  if (data.tokens_by_domain) {
+    const maxTokens = Math.max(...data.tokens_by_domain.map(d => d.tokens));
+    let domainHtml = '';
+    for (const d of data.tokens_by_domain.slice(0, 30)) {
+      const w = Math.max(4, (d.tokens / maxTokens) * 120);
+      domainHtml += `<div class="domain-item">
+        <span>${d.domain} <span style="color:var(--text-dim);font-size:11px">(${d.chunks} chunks)</span></span>
+        <span><span class="domain-bar" style="width:${w}px"></span> ${fmt(d.tokens)}</span>
+      </div>`;
+    }
+    $('#domainList').innerHTML = domainHtml;
+  }
+}
+
+async function loadDomains() {
+  const data = await api('/api/domains');
+  const select = $('#domainFilter');
+  select.innerHTML = '<option value="">All domains</option>';
+  for (const d of data.domains) {
+    select.innerHTML += `<option value="${d}">${d}</option>`;
+  }
+}
+
+async function loadGraph() {
+  const data = await api('/api/graph');
+  if (!data.hubs || data.hubs.length === 0) {
+    $('#graphHubs').innerHTML = '<div style="color:var(--text-dim);font-size:13px">Run: python -m retrieval graph build</div>';
+    return;
+  }
+  let html = '';
+  const max = data.hubs[0].connections;
+  for (const h of data.hubs) {
+    const w = Math.max(4, (h.connections / max) * 200);
+    html += `<div class="domain-item">
+      <span>${h.domain}</span>
+      <span><span class="domain-bar" style="width:${w}px;background:var(--purple)"></span> ${h.connections}</span>
+    </div>`;
+  }
+  $('#graphHubs').innerHTML = html;
+}
+
+async function loadGaps() {
+  const data = await api('/api/gaps');
+
+  if (data.domain_difficulty && data.domain_difficulty.length > 0) {
+    let html = '';
+    for (const d of data.domain_difficulty) {
+      const w = Math.max(4, d.avg_difficulty * 200);
+      const color = d.avg_difficulty > 0.7 ? 'var(--red)' : d.avg_difficulty > 0.4 ? 'var(--orange)' : 'var(--green)';
+      html += `<div class="domain-item">
+        <span>${d.domain} <span style="color:var(--text-dim);font-size:11px">(${d.query_count} queries)</span></span>
+        <span><span class="domain-bar difficulty-bar" style="width:${w}px;background:${color}"></span> ${d.avg_difficulty.toFixed(2)}</span>
+      </div>`;
+    }
+    $('#difficultyList').innerHTML = html;
+  } else {
+    $('#difficultyList').innerHTML = '<div style="color:var(--text-dim);font-size:13px">No difficulty data yet. Use the search to accumulate data.</div>';
+  }
+
+  if (data.hard_queries && data.hard_queries.length > 0) {
+    let html = '';
+    for (const q of data.hard_queries) {
+      html += `<div class="reddit-item">
+        <div class="reddit-title" style="cursor:pointer" onclick="$('#searchInput').value='${q.query_text.replace(/'/g, "\\'")}';doSearch()">${q.query_text.slice(0, 100)}</div>
+        <div class="reddit-meta">Difficulty: ${q.difficulty_score.toFixed(2)} | Domain: ${q.domain}</div>
+      </div>`;
+    }
+    $('#hardQueries').innerHTML = html;
+  } else {
+    $('#hardQueries').innerHTML = '<div style="color:var(--text-dim);font-size:13px">No hard queries logged yet.</div>';
+  }
+}
+
+async function loadReddit() {
+  const data = await api('/api/reddit');
+  if (!data.recent || data.recent.length === 0) {
+    $('#redditFeed').innerHTML = '<div style="color:var(--text-dim)">No recent saves. Run the Reddit scanner first.</div>';
+    return;
+  }
+  let html = `<div style="margin-bottom:12px;font-size:13px;color:var(--text-dim)">
+    ${data.total_saved} total saved | ${data.last_30_days} in last 30 days
+  </div>`;
+  for (const p of data.recent) {
+    html += `<div class="reddit-item">
+      <div class="reddit-title"><a href="https://reddit.com${p.url}" target="_blank">${p.title}</a></div>
+      <div class="reddit-meta">r/${p.subreddit} | ${p.score} pts | ${p.created_date}</div>
+    </div>`;
+  }
+  $('#redditFeed').innerHTML = html;
+}
+
+async function loadFeedbackStats() {
+  const data = await api('/api/feedback/stats');
+  $('#feedbackDetails').innerHTML = `
+    <div class="status-row"><span>Total feedback entries</span><span>${data.total}</span></div>
+    <div class="status-row"><span>Chunks rated</span><span>${data.chunks_rated}</span></div>
+    <div class="status-row"><span>Net positive</span><span style="color:var(--green)">${data.positive}</span></div>
+    <div class="status-row"><span>Net negative</span><span style="color:var(--red)">${data.negative}</span></div>
+    <div style="margin-top:16px;color:var(--text-dim);font-size:13px">
+      Feedback trains the retrieval scoring system. Chunks you mark as helpful will surface higher in future searches.
+      After accumulating enough feedback, the neural reranker will activate automatically.
+    </div>
+  `;
+}
+
+// --- Tabs ---
+$$('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    $$('.tab').forEach(t => t.classList.remove('active'));
+    $$('.tab-content').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    $(`#tab-${tab.dataset.tab}`).classList.add('active');
+  });
+});
+
+// --- Keyboard shortcuts ---
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    $('#searchInput').focus();
+    $('#searchInput').select();
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+    e.preventDefault();
+    doSearch(true);
+  }
+  if (e.key === 'Enter' && document.activeElement === $('#searchInput')) {
+    doSearch();
+  }
+});
+
+// --- Init ---
+(async () => {
+  await Promise.all([loadStats(), loadDomains(), loadGraph(), loadGaps(), loadReddit(), loadFeedbackStats()]);
+})();
+</script>
+</body>
+</html>

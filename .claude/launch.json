@@ -1,0 +1,47 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dashboard",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "uvicorn", "dashboard.server:app", "--host", "127.0.0.1", "--port", "8501"],
+      "port": 8501
+    },
+    {
+      "name": "finmodel-ai",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "hana-hauling",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5173
+    },
+    {
+      "name": "rulesettest",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3001
+    },
+    {
+      "name": "knowledge-dashboard",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "retrieval.serve", "--port", "8600"],
+      "port": 8600
+    },
+    {
+      "name": "nh-mockup",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8701", "-d", "C:\\Users\\rskrn\\Desktop\\Global Edge Strategies Chengdu Huanqiao\\clients\\sullivan-auctioneers\\mockup"],
+      "port": 8701
+    },
+    {
+      "name": "gesedge-dev",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "cd", "/d", "C:\\Users\\rskrn\\Desktop\\gesedge-site", "&&", "npm", "run", "dev", "--", "--port", "3002"],
+      "port": 3002
+    }
+  ]
+}

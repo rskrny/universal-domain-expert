@@ -1,0 +1,303 @@
+{
+  "ai-machine-learning": {
+    "additions": [
+      {
+        "type": "NEW_FRAMEWORK",
+        "title": "Memory Bandwidth as the Primary Performance Limiter for Local LLM Inference",
+        "content": "On consumer hardware like Apple Silicon, token generation speed is directly constrained by memory bandwidth, not compute. The relationship is predictable: available bandwidth (GB/s) divided by model size (GB) yields achievable tokens/second, with typical utilization 70-75% of theoretical maximum. This means model selection for local deployment should prioritize bandwidth efficiency (tokens per GB of model weights) over raw parameter count. When choosing between a 27B and 8B model on M5 Max, the 8B model's 3.4x speed advantage often outweighs capability differences for interactive use, unless the task specifically requires reasoning that the smaller model cannot perform. This framework inverts the common assumption that bigger models always win\u2014on bandwidth-constrained hardware, they lose. (Source: Apple M5 Max LLM inference benchmarking analysis)",
+        "source_claim": "Apple M5 Max achieves 73-75% of theoretical maximum memory bandwidth utilization for LLM inference, with token generation speed directly correlating to the ratio of available bandwidth divided by model size.",
+        "confidence": 0.85,
+        "priority": "high"
+      },
+      {
+        "type": "COUNTER",
+        "title": "Vague Retry Prompts Degrade Model Performance, Not Just Fail to Help",
+        "content": "Common debugging practices\u2014asking a model to 'recheck your work' or 'still doesn't work, please fix'\u2014demonstrably harm performance on benchmarks, not merely fail to improve it. This is a systematic failure mode, not anecdotal. The mechanism appears to be that vague directives without structured context or explicit error analysis push the model into lower-quality reasoning patterns. When retrying, use specific error descriptions, structured chain-of-thought prompts, or multi-model debate instead. This contradicts the intuition that any additional attempt is better than none. (Source: arXiv:2310.01798 analysis of prompt degradation effects)",
+        "source_claim": "Vague retry prompts ('still doesn't work, please fix') demonstrably degrade model performance across benchmarks, not just fail to help.",
+        "confidence": 0.85,
+        "priority": "high"
+      },
+      {
+        "type": "EVIDENCE",
+        "title": "Context Reconstruction Dominates Token Usage in Code-Understanding Tasks",
+        "content": "In Claude Code sessions, token consumption is driven primarily by context reconstruction (repeated file re-reads and dependency exploration) rather than reasoning. Benchmarks show typical queries like 'Why is auth flow depending on this file?' consume 20-30k tokens just to rebuild context. Pre-loading a structured dependency graph reduces token usage by 45% on average and 80-85% on complex tasks. This insight has implications beyond Claude: any AI system operating on codebases should pre-inject structural context (dependency graphs, call hierarchies) rather than relying on the model to reconstruct it dynamically. (Source: GrapeRoot context usage analysis)",
+        "source_claim": "Most token consumption in Claude Code sessions comes from context reconstruction (re-reading files and re-exploring dependencies) rather than reasoning, and pre-loading a dependency graph of code reduces token usage by 45% on average and up to 80-85% on complex tasks.",
+        "confidence": 0.7,
+        "priority": "medium"
+      }
+    ],
+    "skipped": [
+      {
+        "claim": "DeepSeek-R1 8B is the optimal balance of inference speed and capability for local deployment on M5 Max, achieving 72.8 tok/s while providing reasoning capabilities comparable to much larger models.",
+        "reason": "Product-specific recommendation. While the benchmark data is valid (EVIDENCE tier), the 'optimal' claim is subjective and depends on task requirements not specified here. The underlying insight (bandwidth-constrained hardware favors smaller models) is already captured in the memory bandwidth framework addition."
+      },
+      {
+        "claim": "Claude's claude.md instruction file provides limited relief for repeated context re-reading problems because instructions reset across repository switches and don't prevent redundant file access patterns.",
+        "reason": "Specific tool limitation rather than a generalizable ML/AI practice framework. The underlying insight (context reconstruction is the bottleneck) is captured in the context reconstruction evidence addition."
+      },
+      {
+        "claim": "MLX achieves 92% faster inference than llama.cpp for Qwen 3.5 27B models on Apple Silicon, with the speed difference driven by MLX's native Metal implementation handling the Qwen 3.5 architecture better than llama.cpp.",
+        "reason": "Tool/implementation-specific comparison with methodological concerns (different quantization formats make the comparison unclear). The underlying principle (hardware implementation details matter) is subsumed by the memory bandwidth framework."
+      },
+      {
+        "claim": "Intelligent inference pipelines (generating multiple solutions, testing, and selecting the best) can add ~20 percentage points of performance to a base model without additional training or cloud infrastructure.",
+        "reason": "EVIDENCE for existing ensemble/test-time compute frameworks. Valid but incremental. The domain file already covers ensemble methods and tradeoff analysis; this is a data point supporting those frameworks rather than introducing a new pattern."
+      },
+      {
+        "claim": "Different AI models have different strengths for specific bug categories, making multi-model debate or sequential diagnosis more effective than repeated attempts with a single model.",
+        "reason": "EVIDENCE supporting existing ensemble and multi-model strategies. The domain file doesn't explicitly cover debugging workflows, but the underlying principle (ensemble diversity improves outcomes) is well-established. Relevant for code-focused AI systems but not a core ML practice in the current domain."
+      },
+      {
+        "claim": "Influencing outcomes through psychological principles is learnable mechanism rather than an innate personality trait.",
+        "reason": "Out of scope for ML/AI domain expertise. This is organizational psychology/persuasion theory (Cialdini), not directly relevant to machine learning practice."
+      },
+      {
+        "claim": "RAG systems can be implemented with minimal boilerplate by abstracting vector stores, embeddings, and chunking logic into a single library interface",
+        "reason": "EVIDENCE for RAG architecture best practices (abstraction and composition). Valid but incremental. The domain file covers RAG conceptually; this is a tooling/implementation note rather than a framework gap."
+      }
+    ],
+    "domain_gaps": [
+      "Hardware constraints and their interaction with model selection (bandwidth-limited inference, compute-limited training)",
+      "Systematic failure modes in prompting and retry logic (currently the domain assumes most prompting approaches fail gracefully)",
+      "Token accounting and cost optimization in multi-step AI workflows (relevant to MLOps and production thinking)"
+    ],
+    "_tokens_used": 4813
+  },
+  "cybersecurity": {
+    "additions": [
+      {
+        "type": "NEW_FRAMEWORK",
+        "title": "LLM-Based Password Guessing via Probability Distribution Modeling",
+        "content": "Modern language models fine-tuned on leaked password datasets can model human password creation probability distributions with surprising accuracy, achieving 31.63% success rates within 100 guesses\u2014outperforming traditional rule-based and brute-force approaches. PassLLM (Zou et al., USENIX Security 2025) demonstrates this by fine-tuning LoRA-adapted models on millions of breached passwords (ClixSense, 000WebHost) to learn implicit patterns in how users compose passwords. This represents a shift from rule-based password cracking (Hashcat, John the Ripper) to generative modeling of human password behavior. When designing password policies, threat modeling, and user authentication guidance, assume attackers have access to LLM-based guessing tools trained on historical breach corpora; password strength alone is insufficient\u2014entropy sources, length requirements, and breach database integration into validation are now table-stakes.",
+        "source_claim": "LLM-based password guessing fine-tuned on leaked password datasets can correctly guess 31.63% of user passwords within 100 attempts by learning human password creation probability distributions.",
+        "confidence": 0.7,
+        "priority": "high"
+      },
+      {
+        "type": "EVIDENCE",
+        "title": "Password Reuse and Personal Information Patterns as Empirical Threat Foundation",
+        "content": "User password behavior studies confirm the threat model underlying LLM-based guessing: 78% of all users reuse passwords across systems, and 59% of American adults create passwords using predictable patterns derived from personal information. These statistics (Spacelift, IET sources) establish that users do not generate passwords from uniform random distributions; instead, they apply heuristics rooted in personal context, prior experience, and cognitive load. This validates why LLM fine-tuning on breach corpora is effective\u2014it captures the systematic patterns users actually employ. Authentication architects should design systems (MFA, passwordless auth, breach-aware validation) that account for this empirical reality rather than assuming password policies alone will drive users toward high-entropy selection.",
+        "source_claim": "Most internet users create passwords using predictable patterns derived from personal information (59% of American adults) and password reuse (78% of all people), making them vulnerable to intelligence-informed guessing attacks.",
+        "confidence": 0.85,
+        "priority": "high"
+      }
+    ],
+    "skipped": [
+      {
+        "claim": "PassLLM is lightweight enough to run on consumer hardware and supports custom training on organization-specific password datasets, making it adaptable to different platforms and threat contexts.",
+        "reason": "Too vague and opinion-based (confidence 0.6). Lacks specific hardware requirements, training time, computational benchmarks, or comparison to existing tools. Presented as feature claim without demonstrated capability. Worth monitoring as a case study if benchmarks emerge, but not ready for domain framework integration."
+      }
+    ],
+    "domain_gaps": [
+      "AI/ML-based password cracking and generative model application to authentication attacks",
+      "Breach database integration into real-time password validation systems",
+      "Passwordless authentication and MFA as mitigations to password-guessing attacks",
+      "Threat modeling for authentication systems in the LLM era"
+    ],
+    "_tokens_used": 2620
+  },
+  "education-pedagogy": {
+    "additions": [
+      {
+        "type": "NEW_FRAMEWORK",
+        "title": "Negative Example Learning: Intentional Error as Pedagogical Tool",
+        "content": "Having learners deliberately perform a task incorrectly before attempting it correctly can improve understanding and retention of correct processes. This works because learners must consciously reflect on why the error is wrong, creating stronger cognitive anchors than passive explanation alone. The key mechanism is intentionality: learners must be aware they are performing incorrectly, not accidentally making mistakes. This technique leverages the cognitive strength in error detection\u2014people readily identify what is wrong but struggle to validate correct processes through explanation alone. Most effective for procedural tasks (e.g., presentations, strategic gameplay, technical skills) where the principles underlying correct performance can be made explicit through reflection on incorrect execution.",
+        "source_claim": "Having learners intentionally perform a task incorrectly before attempting it correctly improves their understanding and retention of the correct process; The learner must intentionally know they are performing incorrectly for this technique to work as a learning tool; Learners are more effective at identifying and recognizing errors than they are at recognizing correct processes through explanation alone",
+        "confidence": 0.75,
+        "priority": "high"
+      }
+    ],
+    "skipped": [],
+    "domain_gaps": [
+      "Negative example learning and error-based learning as distinct pedagogical strategies (the file mentions assessment and cognitive load but not the deliberate use of errors as instructional content)",
+      "The role of error detection as a cognitive strength in learning design (complementary to error correction frameworks already in cognitive science literature)"
+    ],
+    "_tokens_used": 2223
+  },
+  "environmental-science": {
+    "additions": [
+      {
+        "type": "EVIDENCE",
+        "title": "Mesh Drain Systems for Stormwater Pollution Interception",
+        "content": "Mesh drain systems installed at stormwater infrastructure entry points can intercept solid waste before it enters aquatic ecosystems, with field trials demonstrating collection of 370 kg of garbage over 6 months in a single Australian waterway intervention. This represents a practical, low-cost infrastructure modification that builds on established stormwater best management practices. While the absolute volume captured is modest relative to total municipal waste streams, mesh drains function as a first-line ecological barrier preventing microplastics, debris, and pollutants from reaching receiving waters\u2014a critical intervention point in pollution prevention strategies, particularly in urban and peri-urban landscapes where stormwater runoff is a primary pollution vector.",
+        "source_claim": "Mesh drain systems installed in Australian waterways collected 815 pounds (approximately 370 kg) of garbage in 6 months, demonstrating a practical infrastructure intervention for preventing stormwater pollution.",
+        "confidence": 0.82,
+        "priority": "medium"
+      }
+    ],
+    "skipped": [
+      {
+        "claim": "Mesh drain technology prevents water body pollution by intercepting garbage at storm drain points before it enters aquatic ecosystems.",
+        "reason": "Mechanism-level claim without new quantitative data or novel insight. The first claim already captures the mechanism and adds empirical evidence. This claim adds no new frameworks or contradictions\u2014it restates the logical function of the technology."
+      }
+    ],
+    "domain_gaps": [
+      "Stormwater management infrastructure and best management practices (BMPs) specificity",
+      "Microplastics interception and prevention technologies",
+      "Practical cost-effectiveness frameworks for pollution prevention infrastructure at municipal scale"
+    ],
+    "_tokens_used": 2045
+  },
+  "event-planning": {
+    "additions": [
+      {
+        "type": "NEW_FRAMEWORK",
+        "title": "Collaborative Playlist Management for Social Events",
+        "content": "When crowdsourcing music selection via shared playlists, implement a two-phase approach: (1) seed the playlist with 15-20 curated tracks that establish mood and genre, set explicit constraints (duration limits, genre guidelines, veto rules), and communicate these upfront; (2) lock or audit the playlist 24-48 hours before the event to remove duplicates, off-topic novelty additions, and entries that disrupt coherence. This prevents the 'What's New Pussycat' failure mode\u2014guests repeatedly adding the same song\u2014while preserving the satisfaction benefit of letting attendees feel heard through music selection. Apply this when guest count exceeds 15-20 and you want to balance personalization against playlist integrity.",
+        "source_claim": "Collaborative playlists require active moderation (audit and lock) to prevent degradation through duplicate entries and off-topic novelty songs that disrupt party atmosphere. Setting explicit constraints (genre limits, party-specific guidelines, pre-populated seed songs) before soliciting contributions reduces off-topic submissions and ensures musical coherence.",
+        "confidence": 0.78,
+        "priority": "medium"
+      }
+    ],
+    "skipped": [
+      {
+        "claim": "Crowdsourcing music selection via shared playlists increases guest satisfaction by ensuring personal music preferences are represented and reduces host burden in playlist curation",
+        "reason": "This aligns with existing attendee experience and stakeholder engagement frameworks already in the domain file ('Stakeholder orchestration' and experiential design principles). The claim is intuitive but lacks empirical validation\u2014high upvote count reflects appeal, not evidence of satisfaction impact. No new pattern here."
+      }
+    ],
+    "domain_gaps": [
+      "Event entertainment logistics (music curation, DJ/entertainment vendor management, playlist execution)",
+      "Guest experience micro-details and failure modes in social event design",
+      "Crowdsourced coordination tools and delegation frameworks for guest involvement in event execution"
+    ],
+    "_tokens_used": 2373
+  },
+  "history": {
+    "additions": [],
+    "skipped": [
+      {
+        "claim": "The standardized 'proof' measurement of 57.15% ABV has remained consistent across historical alcohol regulation systems regardless of the actual origin method.",
+        "reason": "This claim conflates two separate historical questions: (1) whether 57.15% is a stable modern standard (true but trivial), and (2) whether this constancy reflects deep historical continuity (unwarranted leap). The evidence quality is low (confidence 0.7, crowd consensus, folk etymology). Does not meet threshold for domain file addition\u2014too specialized for alcohol history, and the claim is internally confused about causation vs. correlation."
+      },
+      {
+        "claim": "An alternative origin is that British naval rum rations used gunpowder tests to verify spirits weren't watered down, establishing 57.15% ABV as the 'proof' standard.",
+        "reason": "This is a popular origin narrative (high engagement, high upvotes) but explicitly flagged as folk etymology with disputed accuracy (confidence 0.6). The domain file's role is to provide vetted expertise grounded in primary sources and historiographical rigor, not to catalog plausible-sounding but unverified stories. Adding this would undermine methodological integrity. If a historian had definitively settled this origin question using naval records and period tax documents, that would warrant inclusion."
+      },
+      {
+        "claim": "The term 'proof' for alcohol measurement originated from a 16th-century English tax enforcement method involving gunpowder ignition tests to detect alcohol content.",
+        "reason": "Lowest confidence (0.4, anecdote only), contested origin story, and too specialized for the existing domain framework. The domain file covers 'economic history' and 'history of technology' broadly, but adding unverified microhistories of specific technical standards creates noise rather than signal. This belongs in specialized alcohol history or material culture literature, not a general historian's expertise file."
+      }
+    ],
+    "domain_gaps": [
+      "History of alcohol and drinking cultures (taxation, regulation, trade, social practice)",
+      "Material history of measurement standards and metrology",
+      "Maritime and naval economic history (supply chains, provisioning, sailor welfare)"
+    ],
+    "_tokens_used": 2251
+  },
+  "neuroscience": {
+    "additions": [
+      {
+        "type": "EVIDENCE",
+        "title": "Non-conscious information processing during daytime naps",
+        "content": "Recent evidence suggests that brief daytime naps (20-90 minutes) actively consolidate learning from information processed below the threshold of conscious awareness, not merely rest the brain. During sleep, the hippocampus and neocortex continue to process and integrate non-consciously perceived information, enabling memory consolidation of stimuli that were never explicitly attended to. This extends the framework of sleep-dependent memory consolidation to include implicit learning pathways, suggesting naps serve a dual function: restoring cognitive capacity while simultaneously consolidating learning that occurred outside explicit awareness.",
+        "source_claim": "Daytime naps enable the brain to process and acquire information that occurs below the threshold of conscious awareness",
+        "confidence": 0.72,
+        "priority": "medium"
+      }
+    ],
+    "skipped": [
+      {
+        "claim": "Short bouts of sleep improve cognitive brain function measurably",
+        "reason": "Already well-covered by existing framework on sleep neuroscience and memory consolidation. The claim adds no new mechanistic insight beyond established knowledge that sleep enhances cognitive performance. The more novel claim about non-conscious processing is captured in the addition above."
+      }
+    ],
+    "domain_gaps": [
+      "Implicit learning and non-conscious acquisition during sleep\u2014currently the file addresses conscious memory consolidation but not the specific mechanisms of learning from sub-threshold stimuli",
+      "Quantitative metrics for nap duration optimization\u2014the file covers sleep architecture generally but lacks specifics on ideal nap windows for different cognitive tasks"
+    ],
+    "_tokens_used": 2026
+  },
+  "personal-finance": {
+    "additions": [
+      {
+        "type": "NEW_FRAMEWORK",
+        "title": "Consumer Friction Audit for Major Purchases",
+        "content": "When buying vehicles or other high-ticket items with financed add-ons, dealerships systematically pre-select optional features (warranties, protection plans, alarms) and rely on customer inattention to finalize sales. This creates a friction point where explicit rejection is required rather than opt-in consent. Your leverage exists at the negotiation stage\u2014most add-ons are significantly overpriced (30-50% markup common), and sustained pushback can remove items entirely or reduce monthly payments by $100-150+. Treat the finance manager's initial presentation as an opening offer, not a final package. Dash cams ($100-200) function as financial risk mitigation tools by providing objective liability evidence in accidents, often paying for themselves in a single incident.",
+        "source_claim": "Claims 4, 5, 6, 7, 9 covering auto finance tactics, add-on pricing, and dash cam ROI",
+        "confidence": 0.85,
+        "priority": "high"
+      },
+      {
+        "type": "EVIDENCE",
+        "title": "Real Wage Erosion Beyond Headline Inflation",
+        "content": "When evaluating salary offers and raises, nominal wage growth must exceed both headline inflation AND the cost increases of employer-provided benefits (particularly health insurance premiums). A 2% raise paired with 12% health insurance cost increases results in net negative take-home pay, meaning the true cost-of-living threshold for wage-workers is substantially higher than published inflation figures. This is especially critical during salary negotiations where employers present nominal raises as 'keeping pace with inflation' without disclosing the benefits cost shift.",
+        "source_claim": "Claims 2 and 10 covering inflation mechanics and health insurance premium increases",
+        "confidence": 0.85,
+        "priority": "high"
+      }
+    ],
+    "skipped": [
+      {
+        "claim": "Khan Academy offers a free Personal Finance section covering practical financial skills including tax filing, college payment strategies, and retirement planning.",
+        "reason": "Resource recommendation, not financial strategy or decision framework. Outside the domain's scope of advising on actual financial choices."
+      },
+      {
+        "claim": "Khan Academy operates as a donation-funded non-profit with zero advertising, making its educational resources ad-free and sustainable through voluntary contributions.",
+        "reason": "Institutional information about a platform. Relevant to meta-advice ('where to learn') but not to the financial decision-making frameworks the domain covers."
+      },
+      {
+        "claim": "Dash cams can serve as witness evidence in hit-and-run accidents, enabling victims to pursue justice and hold perpetrators accountable.",
+        "reason": "While true, this is a secondary benefit (witness duty) distinct from the primary personal finance ROI argument already captured in the primary addition. Legal/civic angle doesn't expand financial strategy."
+      }
+    ],
+    "domain_gaps": [
+      "Consumer negotiation tactics for major purchases (the domain covers financial strategy but not the tactical execution layer of actual purchasing decisions)",
+      "Behavioral risk mitigation through low-cost tools (dash cams, documentation practices) as financial protection\u2014currently the domain assumes risk is managed through insurance/portfolio structure, not preventive physical tools"
+    ],
+    "_tokens_used": 3644
+  },
+  "software-dev": {
+    "additions": [
+      {
+        "type": "NEW_FRAMEWORK",
+        "title": "Four-Question MVP Stability Diagnostic",
+        "content": "When evaluating whether an MVP with early traction (1k+ users) can scale or requires architectural rebuild, apply a four-question test: (1) Can you trace bugs to root cause through logs and metrics? (2) Do you understand cost-per-active-user across all external APIs and services? (3) Can you deploy feature changes in isolation without affecting production traffic? (4) Is your data model stable, or are you discovering schema issues weekly? Answering 'no' to more than one question indicates the codebase has accumulated sufficient architectural debt that scaling will require a rebuild. This pattern emerges consistently in vibe-coded MVPs that prioritized speed over observability, cost modeling, and environment separation. Use this diagnostic before raising capital or committing significant engineering resources to scaling.",
+        "source_claim": "A four-question diagnostic test\u2014data model clarity, bug root-cause traceability, cost-per-user estimation, and isolated feature changes\u2014distinguishes MVPs that can stabilize from those destined for rewrite.",
+        "confidence": 0.65,
+        "priority": "high"
+      },
+      {
+        "type": "EVIDENCE",
+        "title": "AI-Generated Code Scaling Failure Patterns",
+        "content": "MVPs built rapidly with vibe-coding (AI-guided development) exhibit five predictable failure modes when scaling: (1) data model drift\u2014duplicate fields and missing indexes by day 15 of production use; (2) happy-path-only logic that breaks when users deviate (double-clicks, mid-action refreshes, delayed interactions); (3) missing observability\u2014inability to diagnose failures leads teams to re-prompt AI, moving bugs rather than fixing them; (4) hidden API costs across avatar, AI, and media processing APIs that appear viable at low volume but drain budgets at scale; (5) production/experiment environment conflation that allows feature tests to corrupt production data. These patterns have been observed across 12+ early-stage codebases and correlate with the need for rebuild when growth accelerates. The implication is that AI tooling shifts the bottleneck from code generation speed to architectural discipline\u2014the tools make it easier to defer structural decisions, not easier to scale without them.",
+        "source_claim": "Vibe-coded MVPs with users fail predictably at scale due to five specific architectural issues: data model drift, logic limited to happy paths, missing observability, hidden API costs, and lack of environment separation between experiments and production.",
+        "confidence": 0.65,
+        "priority": "high"
+      },
+      {
+        "type": "COUNTER",
+        "title": "AI Coding Assistants Shift Hiring from Language Specialization to Architecture",
+        "content": "Contrary to conventional hiring practices that filter for language-specific expertise ('Python developer,' 'React developer'), current AI coding assistants (Cursor, Claude) have reached capability levels where they generate complete production code with minimal hand-holding. This shift is rendering language-specific job titles increasingly irrelevant and surfacing a counter-intuitive hiring pattern: expertise in system design, DevOps, cloud architecture, and observability is becoming the bottleneck, not language facility. Teams can now decompose problems into architectural requirements and delegate code generation to AI; the value accrues to engineers who can make correct architectural choices. This represents a meaningful shift in required developer skillsets rather than merely incremental tool improvement, though it remains not yet universally validated across the industry.",
+        "source_claim": "AI coding assistants have reached capability levels where they generate 100% of production code with minimal human guidance, making language-specific hiring obsolete in favor of system design and architecture skills.",
+        "confidence": 0.6,
+        "priority": "medium"
+      }
+    ],
+    "skipped": [
+      {
+        "claim": "FreeCodeCamp offers a comprehensive, cost-free alternative for learning practical programming skills including machine learning via TensorFlow.",
+        "reason": "SKIP: Covers learning resources, not within the domain of production system design, architecture, or engineering judgment. This is correctly scoped to learning-paths or education domains, not software development practice."
+      },
+      {
+        "claim": "The historical pattern of programming becoming more accessible while simultaneously increasing in complexity will continue to absorb productivity gains from AI tooling.",
+        "reason": "SKIP: Overlaps with claim #6 (AI hiring shift) but is more abstract and less actionable. The more specific architectural hiring pattern is captured in the COUNTER addition. This claim is validated by the same source and adds no additional framework."
+      },
+      {
+        "claim": "MVPs with strong product-market fit (1k+ paying users) frequently hide critical infrastructure debt that becomes catastrophic during scaling or investor scrutiny.",
+        "reason": "EVIDENCE: Partially captured by the NEW_FRAMEWORK diagnostic and AI-generated code patterns additions. This claim is the umbrella observation; the more specific architectural patterns and diagnostic tool are higher leverage for the domain file."
+      },
+      {
+        "claim": "Page response times above 600ms at the 95th percentile meaningfully harm conversion, making latency optimization as critical as availability monitoring.",
+        "reason": "SKIP: Already implicitly covered in the existing domain file under 'Performance Engineering' and 'Core Expertise Areas.' The claim lacks quantified evidence specific to the author's domain and represents conventional wisdom already present in the file's scope."
+      }
+    ],
+    "domain_gaps": [
+      "Cost modeling and financial observability for AI-dependent systems (external API budgeting, cost-per-user tracking)",
+      "Environment separation and staging practices (production isolation, feature experiment safety)",
+      "Observability patterns specific to AI-generated code (logging strategies, debugging vibe-coded systems)",
+      "Hiring and team composition in an age where code generation is commoditized"
+    ],
+    "_tokens_used": 4518
+  }
+}

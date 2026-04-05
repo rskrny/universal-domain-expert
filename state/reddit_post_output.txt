@@ -1,0 +1,295 @@
+================================================================================
+REDDIT POST CAPTURE
+================================================================================
+
+Title: anthropic isn't the only reason you're hitting claude code limits. i did audit of 926 sessions and found a lot of the waste was on my side.
+Author: u/Medium_Island_2795
+Score: 25
+Upvote Ratio: 0.72
+Subreddit: r/ClaudeCode
+URL: https://reddit.com/r/ClaudeCode/comments/1sd8t5u/anthropic_isnt_the_only_reason_youre_hitting/
+Created UTC: 1775408380.0
+Num Comments: 23
+Link Flair: Showcase
+
+--------------------------------------------------------------------------------
+LINKS FOUND IN POST
+--------------------------------------------------------------------------------
+  https://www.reddit.com/r/ClaudeCode/comments/1sd8t5u/anthropic_isnt_the_only_reason_youre_hitting/
+  https://reddit.com/link/1sd8t5u/video/hsrdzt80letg1/player
+  https://github.com/jasonjmcghee/rtk
+  https://github.com/gupsammy/Claudest
+  https://github.com/gupsammy/Claudest
+  https://www.reddit.com/r/ClaudeCode/comments/1r1w397/comment/odt85ev/
+  https://www.reddit.com/r/ClaudeCode/comments/1r1w397/comment/odt85ev/
+
+--------------------------------------------------------------------------------
+FULL POST TEXT (selftext)
+--------------------------------------------------------------------------------
+
+Last 10 days, X and Reddit have been full of outrage about Anthropic's rate limit changes. Suddenly I was burning through a week's allowance in two days, but I was working on the same projects and my workflows hadn't changed. People on socials reporting the $200 Max plan is running dry in hours, some reporting unexplained ghost token usage. Some people went as far as reverse-engineering the Claude Code binary and found cache bugs causing 10-20x cost inflation. Anthropic did not acknowledge the issue. They were playing with the knobs in the background.
+
+Like most, my work had completely stopped. I spend 8-10 hours a day inside Claude Code, and suddenly half my week was gone by Tuesday.
+
+But being angry wasn't fixing anything. I realized, AI is getting commoditized. Subscriptions are the onboarding ramp. The real pricing model is tokens, same as electricity. You're renting intelligence by the unit. So as someone who depends on this tool every day, and would likely depend on something similar in future, I want to squeeze maximum value out of every token I'm paying for.
+
+I started investigating with a basic question. How much context is loaded before I even type anything? iykyk, every Claude Code session starts with a base payload (system prompt, tool definitions, agent descriptions, memory files, skill descriptions, MCP schemas). You can run `/context` at any point in the conversation to see what's loaded. I ran it at session start and the answer was 45,000 tokens. I'd been on the 1M context window with a percentage bar in my statusline, so 45k showed up as \~5%. I never looked twice, or did the absolute count in my head. This same 45k, on the standard 200k window, is over 20% gone before you've said a word. And you're paying this 45k cost every turn.
+
+Claude Code (and every AI assistant) doesn't maintain a persistent conversation. It's a stateless loop. Every single turn, the entire history gets rebuilt from scratch and sent to the model: system prompt, tool schemas, every previous message, your new message. All of it, every time. Prompt caching is how providers keep this affordable. They don't reload the parts that are common across turns, which saves 90% on those tokens. But keeping things cached costs money too, and Anthropic decided 5 minutes is the sweet spot. After that, the cache expires. Their incentives are aligned with you burning more tokens, not fewer. So on a typical turn, you're paying $0.50/MTok for the cached prefix and $5/MTok only for the new content at the end. The moment that cache expires, your next turn re-processes everything at full price. 10x cost jump, invisible to you.
+
+So I went manic optimizing. I trimmed and redid my CLAUDE md and memory files, consolidated skill descriptions, turned off unused MCP servers, tightened the schema my memory hook was injecting on session start. Shaved maybe 4-5k tokens. 10% reduction. That felt good for an hour.
+
+I got curious again and looked at where the other 40k was coming from. 20,000 tokens were system tool schema definitions. By default, Claude Code loads the full JSON schema for every available tool into context at session start, whether you use that tool or not. They really do want you to burn more tokens than required. Most users won't even know this is configurable. I didn't.
+
+The setting is called enable\_tool\_search. It does deferred tool loading. Here's how to set it in your settings.json:
+
+    "env": {
+        "ENABLE_TOOL_SEARCH": "true"
+    }
+
+This setting only loads 6 primary tools and lazy-loads the rest on demand instead of dumping them all upfront. Starting context dropped from 45k to 20k and the system tool overhead went from 20k to 6k. 14,000 tokens saved on every single turn of every single session, from one line in a config file.
+
+Some rough math on what that one setting was costing me. My sessions average 22 turns. 14,000 extra tokens per turn = 308,000 tokens per session that didn't need to be there. Across 858 sessions, that's 264 million tokens. At cache-read pricing ($0.50/MTok), that's $132. But over half my turns were hitting expired caches and paying full input price ($5/MTok), so the real cost was somewhere between $132 and $1,300. One default setting. And for subscription users, those are the same tokens counting against your rate limit quota.
+
+That number made my head spin. One setting I'd never heard of was burning this much. What else was invisible? Anthropic has a built-in `/insights` command, but after running it once I didn't find it particularly useful for diagnosing where waste was actually happening. Claude Code stores every conversation as JSONL files locally under `~/.claude/projects/`, but there's no built-in way to get a real breakdown by session, cost per project, or what categories of work are expensive.
+
+So I built a token usage auditor. It walks every JSONL file, parses every turn, loads everything into a SQLite database (token counts, cache hit ratios, tool calls, idle gaps, edit failures, skill invocations), and an insights engine ranks waste categories by estimated dollar amount. It also generates an interactive dashboard with 19 charts: cache trajectories per session, cost breakdowns by project and model, tool efficiency metrics, behavioral patterns, skill usage analysis.
+
+https://reddit.com/link/1sd8t5u/video/hsrdzt80letg1/player
+
+My stats: 858 sessions. 18,903 turns. $1,619 estimated spend across 33 days. What the dashboard helped me find:
+
+**1. cache expiry is the single biggest waste category**
+
+54% of my turns (6,152 out of 11,357) followed an idle gap longer than 5 minutes. Every one of those turns paid full input price instead of the cached rate. 10x multiplier applied to the entire conversation context, over half the time.
+
+The auditor flags "cache cliffs" specifically: moments where cache\_read\_ratio drops by more than 50% between consecutive turns. 232 of those across 858 sessions, concentrated in my longest and most expensive projects.
+
+This is the waste pattern that subscription users feel as rate limits and API users feel as bills. You're in the middle of a long session, you go grab coffee or get pulled into a Slack thread, you come back five minutes later and type your next message. Everything gets re-processed from scratch. The context didn't change. You didn't change. The cache just expired.
+
+Estimated waste: 12.3 million tokens that counted against my usage for zero value. At API rates that's $55-$600 depending on cache state, but the rate-limit hit is the part that actually hurts on a subscription. Those 12.3M tokens are roughly 7.5% of my total input budget, gone to idle gaps.
+
+**2. 20% of your context is tool schemas you'll never call**
+
+Covered above, but the dashboard makes it starker. The auditor tracks skill usage across all sessions. 42 skills loaded in my setup. 19 of them had 2 or fewer invocations across the entire 858-session dataset. Every one of those skill schemas sat in context on every turn of every session, eating input tokens.
+
+The dashboard has a "skills to consider disabling" table that flags low-usage skills automatically with a reason column (never used, low frequency, errors on every run). Immediately actionable: disable the ones you don't use, reclaim the context.
+
+Combined with the ENABLE\_TOOL\_SEARCH setting, context hygiene was the highest-leverage optimization I found. No behavior change required, just configuration.
+
+**3. redundant file reads compound quietly**
+
+1,122 extra file reads across all sessions where the same file was read 3 or more times. Worst case: one session read the same file 33 times. Another hit 28 reads on a single file.
+
+Each re-read isn't expensive on its own. But the output from every read sits in your conversation context for every subsequent turn. In a long session that's already cache-stressed, redundant reads pad the context that gets re-processed at full price every time the cache expires. Estimated waste: around 561K tokens across all sessions, roughly $2.80-$28 in API cost. Small individually, but the interaction with cache expiry is what makes it compound.
+
+The auditor also flags bash antipatterns (662 calls where Claude used `cat`, `grep`, `find` via bash instead of native Read/Grep/Glob tools) and edit retry chains (31 failed-edit-then-retry sequences). Both contribute to context bloat in the same compounding way. I also installed [RTK](https://github.com/jasonjmcghee/rtk) (a CLI proxy that filters and summarizes command outputs before they reach your LLM context) to cut down output token bloat from verbose shell commands. Found it on Twitter, worth checking out if you run a lot of bash-heavy workflows.
+
+After seeing the cache expiry data, I built three hooks to make it visible before it costs anything:
+
+* **Stop hook** — records the exact timestamp after every Claude turn, so the system knows when you went idle
+* **UserPromptSubmit hook** — checks how long you've been idle since Claude's last response. If it's been more than 5 minutes, blocks your message once and warns you: "cache expired, this turn will re-process full context from scratch. run /compact first to reduce cost, or re-send to proceed."
+* **SessionStart hook** — for resumed sessions, reads your last transcript, estimates how many cached tokens will need re-creation, and warns you before your first prompt
+
+Before these hooks, cache expiry was invisible. Now I see it before the expensive turn fires. I can /compact to shrink context, or just proceed knowing what I'm paying. These hooks aren't part of the plugin yet (the UX of blocking a user's prompt needs more thought), but if there's demand I'll ship them.
+
+I don't prefer /compact (which loses context) or resuming stale sessions (which pays for a full cache rebuild) for continuity. Instead I just /clear and start a new session. The memory plugin this auditor skill is part of auto-injects context from your previous session on startup, so the new session has what it needs without carrying 200k tokens of conversation history. When you clear the session, it maintains state of which session you cleared from. That means if you're working on 2 parallel threads in the same project, each clear gives the next session curated context of what you did in the last one. There's also a skill Claude can invoke to search and recall any past conversation. I wrote about the memory system in detail last month (link in comments). The token auditor is the latest addition to this plugin because I kept hitting limits and wanted visibility into why.
+
+The plugin is called claude-memory, hosted on my open source claude code marketplace called claudest. The auditor is one skill (`/get-token-insights`). The plugin includes automatic session context injection on startup and clear, full conversation search across your history, and a learning extraction skill (inspired by the unreleased and leaked "dream" feature) that consolidates insights from past sessions into persistent memory files. First auditor run takes \~100 seconds for thousands of session files, then incremental runs take under 5 seconds.
+
+Link to repo: [https://github.com/gupsammy/Claudest](https://github.com/gupsammy/Claudest)
+
+the token insights skill is `/get-token-insights, as part of claude-memory plugin.`  
+`Installation and setup is as easy as -`
+
+    /plugin marketplace add gupsammy/claudest 
+    /plugin install claude-memory@claudest
+
+first run takes \~100s, then incremental. opens an interactive dashboard in your browser
+
+the memory post i mentioned: [https://www.reddit.com/r/ClaudeCode/comments/1r1w397/comment/odt85ev/](https://www.reddit.com/r/ClaudeCode/comments/1r1w397/comment/odt85ev/)
+
+the cache warning hooks are in my personal setup, not shipped yet.
+
+if people want them i'll add them to the plugin. happy to answer questions about the data or the implementation.
+
+**limitations worth noting:**
+
+* the JSONL parsing depends on Claude Code's local file format, which isn't officially documented. works on the current format but could break if Anthropic changes it.
+* dollar estimates use published API pricing (Opus 4.6: $5/MTok input, $25/MTok output, $0.50/MTok cache read). subscription plans don't map 1:1 to API costs. the relative waste rankings are what matter, not absolute dollar figures.
+* "waste" is contextual. some cache rebuilds are unavoidable (you have to eat lunch). the point is visibility, not elimination.
+
+One more thing. This auditor isn't only useful if you're a Claude Code user. If you're building with the Claude Code SDK, this skill applies observability directly to your agent sessions. And the underlying approach (parse the JSONL transcript, load into SQLite, surface patterns) generalizes to most CLI coding agents. They all work roughly the same way under the hood. As long as the agent writes a raw session file, you can observe the same waste patterns. I built this for Claude Code because that's what I use, but the architecture ports.
+
+If you're burning through your limits faster than expected and don't know why, this gives you the data to see where it's actually going.
+
+================================================================================
+COMMENTS (23 total)
+================================================================================
+
+--- Comment #1 (depth 0) ---
+Author: u/Otherwise_Wave9374
+Score: 5
+Body:
+  The math on "one default setting burned millions of tokens" is painful, but super useful. I think a lot of people assume the context window is just a hard cap, not a per-turn recurring cost.
+  
+  The cache expiry insight matches what I see too, any real pause turns the next message into a bill spike.
+  
+  If you ever share the SQLite schema / dashboard approach, I'd love to compare notes. We have been looking at agent session observability and token budgets as well: https://www.agentixlabs.com/
+
+Links in comment:
+  https://www.agentixlabs.com/
+
+  --- Comment #2 (depth 1) ---
+  Author: u/Medium_Island_2795
+  Score: 3
+  Body:
+    Hi. Yes cache bust is worst way to burn tokens fast, esp if you are using 1M windows heavily, it adds up quite fast. Learnt from experience :)
+    
+    The repo is open source at - [https://github.com/gupsammy/Claudest](https://github.com/gupsammy/Claudest) . This skill is part of the claude-memory plugin. do check it out if you are interested.
+    
+    I have shared my approach when i wrote about it previously about building a memory plugin with sqlite and fts5 search [https://www.reddit.com/r/ClaudeCode/comments/1r1w397/comment/odt85ev/](https://www.reddit.com/r/ClaudeCode/comments/1r1w397/comment/odt85ev/)
+    
+    since then i have refined it further, i will be writing more about new experiments around memory consolidation i am working on currently.
+    
+    Will checkout your website and would love to chat on this further.
+
+  Links in comment:
+    https://github.com/gupsammy/Claudest
+    https://github.com/gupsammy/Claudest
+    https://www.reddit.com/r/ClaudeCode/comments/1r1w397/comment/odt85ev/
+    https://www.reddit.com/r/ClaudeCode/comments/1r1w397/comment/odt85ev/
+
+    --- Comment #3 (depth 2) ---
+    Author: u/Easy-Unit2087
+    Score: 1
+    Body:
+      You should (let Claude) write a proxy bridge to tackle some of these problems. 
+
+      --- Comment #4 (depth 3) ---
+      Author: u/sandieindie
+      Score: 1
+      Body:
+        Great post really. Whats your thought on complete paradigm shift here? I dont think claude code or similar agents are going to be same as it works today in near future. What would he game changing according to you
+
+--- Comment #5 (depth 0) ---
+Author: u/Tatrions
+Score: 4
+Body:
+  this is one of the best analyses i've seen on actual token waste. the enable\_tool\_search finding alone is worth the post, 14k tokens per turn is insane for a default setting. the 5 min cache expiry math is also eye opening because it means taking a coffee break literally costs you 10x on the next turn. the natural next optimization after squeezing context is model selection. once your context is tight, running Sonnet instead of Opus on the simple turns compounds on top of everything you already saved
+
+  --- Comment #6 (depth 1) ---
+  Author: u/Medium_Island_2795
+  Score: 1
+  Body:
+    thank you :)  
+      
+    Yes absolutely. probably should have included model selection, it is a significant factor to optimize context usage..
+
+    --- Comment #7 (depth 2) ---
+    Author: u/Lumpy-Comedian-1027
+    Score: 2
+    Body:
+      as far as i can see this is default on in current versions if you're using anthropic api, tho. if not then it's perfect!
+
+--- Comment #8 (depth 0) ---
+Author: u/_derpiii_
+Score: 3
+Body:
+  Excellent post. 
+
+  --- Comment #9 (depth 1) ---
+  Author: u/dynoman7
+  Score: 1
+  Body:
+    Five stars 
+
+--- Comment #10 (depth 0) ---
+Author: u/Puzzleheaded_Good360
+Score: 3
+Body:
+  Take my upvote 
+
+  --- Comment #11 (depth 1) ---
+  Author: u/Medium_Island_2795
+  Score: 1
+  Body:
+    thank you ser :)
+
+--- Comment #12 (depth 0) ---
+Author: u/Spirited-Ad6269
+Score: 2
+Body:
+  This post deserves all the awards there are on Reddit. Many thanks!
+
+  --- Comment #13 (depth 1) ---
+  Author: u/Medium_Island_2795
+  Score: 1
+  Body:
+    thank you, glad i could help.
+
+--- Comment #14 (depth 0) ---
+Author: u/Dead0k87
+Score: 2
+Body:
+  So as per my understanding, short cache, automatic loads  of all MCPs means dev intentionally made logic to burn more of your tokens behind the scene? 
+
+  --- Comment #15 (depth 1) ---
+  Author: u/Medium_Island_2795
+  Score: 1
+  Body:
+    Well i can't claim it is intentional. but it hasn't been easily explained. I have been scouring docs and the default settings for claude are certainly lot of useless token burning.  
+    they (anthropic guys thariq and boris) even encouraged everyone to never clear 1M context windows.   
+      
+    short cache setting is useful certainly, it has its place. anthropic api provides caching up to 1hr, but it costs 2 times of 5 min cache (which is still only 20% of full cost). i suspect caching is cheap but also takes up valuable inference capacity which anthropic has to serve to customers. that's why no cache adjustment available in claude code settings.
+
+--- Comment #16 (depth 0) ---
+Author: u/ll-_-ll---
+Score: 2
+Body:
+  Great post! Thank you :)
+
+--- Comment #17 (depth 0) ---
+Author: u/Independent_Paint752
+Score: 2
+Body:
+  Listen to this guy, he is smart.
+
+  --- Comment #18 (depth 1) ---
+  Author: u/Medium_Island_2795
+  Score: 1
+  Body:
+    thank you. happy to help :)
+
+--- Comment #19 (depth 0) ---
+Author: u/KittenBrix
+Score: 1
+Body:
+  I’m pissed about the cache part. How do I avoid that? Is that like, 5 minutes since the last turn ended? 5 minutes since last turn submission? If I’m running an orchestration process depending on subagents, and they take longer than 5 minutes to finish, am I paying cache miss on that too?
+
+--- Comment #20 (depth 0) ---
+Author: u/weissblut
+Score: 1
+Body:
+  Thanks for the write-up! I defo would love the hooks plugin too. And I have a question - how does your claude-memory differs from Claude-mem? I like the idea of saving stuff in my local machine, but am worried about context bloating! 
+
+--- Comment #21 (depth 0) ---
+Author: u/monstertacotime
+Score: 1
+Body:
+  Lmfao, no. 
+
+--- Comment #22 (depth 0) ---
+Author: u/Rough-Hotel-9602
+Score: 1
+Body:
+  Interesting 
+
+--- Comment #23 (depth 0) ---
+Author: u/SocialASaaSin
+Score: 1
+Body:
+  Can the enable search tool be set in the web version or only via terminal? 
+  
+  
+

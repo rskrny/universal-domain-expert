@@ -1,0 +1,2 @@
+{"timestamp": "2026-04-04T03:07:42.827303+00:00", "platform": "linkedin", "status": "failed", "content_type": "text", "body_preview": "Hello from the social distribution engine!", "post_id": null, "post_url": null, "error": "LINKEDIN_ACCESS_TOKEN not set in .env; LINKEDIN_PERSON_URN or LINKEDIN_ORG_URN required in .env"}
+{"timestamp": "2026-04-04T04:05:23.706103+00:00", "platform": "linkedin", "status": "dry_run", "content_type": "text", "body_preview": "Testing the social distribution engine.", "post_id": null, "post_url": null, "error": null}

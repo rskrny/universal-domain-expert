@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.eggs/
+
+# Retrieval store (large binary files, rebuild with `python -m retrieval index`)
+retrieval/store/
+retrieval/knowledge-graph.html
+
+# Binaries
+*.exe
+
+# IDE / Editor
+.vscode/
+.idea/
+
+# Environment
+.env
+.env.*
+*.log
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Wrangler state
+.wrangler/
+
+# Temp files
+*.tmp
+*.bak
