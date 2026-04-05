@@ -102,6 +102,11 @@ GENERAL_KEYWORDS = {
     "python", "typescript", "fastapi", "supabase", "railway",
     "startup", "indie", "founder", "solo", "saas", "revenue",
     "prompt", "engineering", "fine-tune", "lora",
+    # Foundational theory that feeds domain agent reasoning
+    "reasoning", "ontology", "epistemology", "bayesian", "inference",
+    "information", "entropy", "complexity", "emergence", "cognition",
+    "category-theory", "systems-thinking", "graph-theory", "heuristic",
+    "decision-theory", "causal", "causality", "abstraction", "meta-learning",
 }
 
 

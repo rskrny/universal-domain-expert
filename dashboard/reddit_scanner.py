@@ -48,6 +48,16 @@ SUBREDDIT_CONFIG = {
         "weight": 0.8,
         "posts_per_sub": 5,
     },
+    # Foundational theory: feeds reasoning/architecture improvements for domain agents
+    "theory_reasoning": {
+        "subs": [
+            "QuantumComputing", "InformationTheory", "compsci",
+            "PhilosophyofScience", "CognitiveScience", "complexity",
+            "SystemsThinking", "CategoryTheory",
+        ],
+        "weight": 1.1,
+        "posts_per_sub": 5,
+    },
 }
 
 # Content signals that boost quality score

@@ -205,6 +205,21 @@ ALLOWLIST = {
     # DOMAINS: operations-automation
     "n8n",                  # NEW: Open-source workflow automation. Email parsing, webhooks.
     "Automate",             # NEW: General automation scripts and workflows.
+
+    # ── Foundational Theory ──────────────────────────────────────────────
+    # WHY: Domain agent reasoning, knowledge architecture, inference
+    # quality. High-level thinking that makes agents smarter.
+    # DOMAINS: ai-machine-learning, context-engineering
+    "QuantumComputing",     # Quantum logic, superposition of states, measurement theory.
+    "InformationTheory",    # Shannon entropy, compression, signal vs noise.
+    "compsci",              # Computation theory, algorithms, complexity classes.
+    "PhilosophyofScience",  # Epistemology, falsifiability, reasoning frameworks.
+    "CognitiveScience",     # How humans reason. Mental models, biases, decision-making.
+    "complexity",           # Complex systems, emergence, network effects.
+    "SystemsThinking",      # Feedback loops, stocks/flows, system dynamics.
+    "CategoryTheory",       # Mathematical abstractions. Compositional reasoning patterns.
+    "math",                 # General mathematics. Proof techniques, structures.
+    "AskPhilosophy",        # Epistemology, logic, knowledge justification.
 }
 
 
@@ -285,6 +300,23 @@ SCAN_TARGETS = {
             "Biohackers",          # NEW: Broader biohacking community.
         ],
         "weight": 0.8,
+        "posts_per_sub": 5,
+        "time_filter": "week",
+    },
+
+    # Tier 5: Check weekly. Foundational theory for agent reasoning.
+    "tier5_theory": {
+        "subs": [
+            "QuantumComputing",
+            "InformationTheory",
+            "compsci",
+            "PhilosophyofScience",
+            "CognitiveScience",
+            "complexity",
+            "SystemsThinking",
+            "CategoryTheory",
+        ],
+        "weight": 1.1,
         "posts_per_sub": 5,
         "time_filter": "week",
     },
