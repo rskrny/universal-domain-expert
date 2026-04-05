@@ -1,24 +1,52 @@
 """
 MCP Server for the Context Engineering Retrieval System.
 
-Exposes search, index, and stats as MCP tools that Claude Code
-can call natively. Run with:
+Exposes search, index, domain expertise, and stats as MCP tools
+that Claude Code can call natively from ANY working directory.
 
+Run with:
     python -m retrieval.mcp_server
 
-Or add to your Claude Code MCP config.
+Or add to your Claude Code global settings.json under mcpServers.
+
+Path resolution order:
+  1. KNOWLEDGE_ROOT environment variable (set in MCP config)
+  2. cwd (if it contains retrieval/config.yaml)
+  3. Script's parent directory (fallback)
 """
 
 import json
+import os
 import sys
 from pathlib import Path
 
 from .config import RetrievalConfig
 
 
+def _resolve_root() -> Path:
+    """Find the knowledge base root directory.
+
+    Checks in order:
+      1. KNOWLEDGE_ROOT env var (explicit, always wins)
+      2. Current working directory (if it has retrieval/config.yaml)
+      3. This file's parent parent (retrieval/ -> project root)
+    """
+    env_root = os.environ.get("KNOWLEDGE_ROOT")
+    if env_root:
+        p = Path(env_root)
+        if p.exists():
+            return p
+
+    cwd = Path.cwd()
+    if (cwd / "retrieval" / "config.yaml").exists():
+        return cwd
+
+    return Path(__file__).resolve().parent.parent
+
+
 def _get_config() -> RetrievalConfig:
-    """Load config, defaulting to current directory as knowledge root."""
-    root = Path.cwd()
+    """Load config from the resolved knowledge root."""
+    root = _resolve_root()
     config_path = root / "retrieval" / "config.yaml"
     if config_path.exists():
         config = RetrievalConfig.from_yaml(config_path)
@@ -128,6 +156,189 @@ def handle_get_context(params: dict) -> dict:
     }
 
 
+def handle_feedback(params: dict) -> dict:
+    """Record feedback for a chunk."""
+    from .store import Store
+
+    config = _get_config()
+    store = Store(config.db_path, config.store_dir)
+
+    chunk_id = params.get("chunk_id")
+    query = params.get("query", "")
+    rating = params.get("rating", 0)
+
+    if not chunk_id or rating not in (-1, 1):
+        store.close()
+        return {"error": "chunk_id and rating (+1 or -1) required"}
+
+    store.add_feedback(chunk_id, query, rating)
+    count = store.feedback_count()
+    store.close()
+
+    return {
+        "recorded": True,
+        "chunk_id": chunk_id,
+        "rating": rating,
+        "total_feedback_entries": count,
+    }
+
+
+def handle_log_routing(params: dict) -> dict:
+    """Log a routing decision for neural router training."""
+    from .store import Store
+
+    config = _get_config()
+    store = Store(config.db_path, config.store_dir)
+
+    query = params.get("query", "")
+    domain = params.get("domain", "")
+    confidence = params.get("confidence", 0.0)
+
+    if not query or not domain:
+        store.close()
+        return {"error": "query and domain required"}
+
+    store.log_routing(query, domain, confidence)
+    count = store.routing_log_count()
+    store.close()
+
+    return {
+        "logged": True,
+        "domain": domain,
+        "total_routing_entries": count,
+        "neural_router_threshold": 50,
+        "ready_to_train": count >= 50,
+    }
+
+
+def handle_list_domains(params: dict) -> dict:
+    """List all available domain expertise files."""
+    root = _resolve_root()
+    domains_dir = root / "prompts" / "domains"
+
+    if not domains_dir.exists():
+        return {"error": "domains directory not found", "root": str(root)}
+
+    domains = []
+    for f in sorted(domains_dir.glob("*.md")):
+        name = f.stem
+        first_line = ""
+        try:
+            with open(f, encoding="utf-8") as fh:
+                for line in fh:
+                    line = line.strip()
+                    if line.startswith("# "):
+                        first_line = line[2:].strip()
+                        break
+        except Exception:
+            pass
+        domains.append({"name": name, "title": first_line, "path": str(f)})
+
+    return {"domains": domains, "count": len(domains)}
+
+
+def handle_get_domain(params: dict) -> dict:
+    """Load a domain expertise file by name."""
+    root = _resolve_root()
+    domain_name = params.get("domain", "").strip()
+
+    if not domain_name:
+        return {"error": "domain name required"}
+
+    if not domain_name.endswith(".md"):
+        domain_name += ".md"
+
+    domain_path = root / "prompts" / "domains" / domain_name
+
+    if not domain_path.exists():
+        available = [f.stem for f in (root / "prompts" / "domains").glob("*.md")]
+        return {
+            "error": f"Domain file not found: {domain_name}",
+            "available": available,
+        }
+
+    try:
+        content = domain_path.read_text(encoding="utf-8")
+        return {
+            "domain": domain_path.stem,
+            "content": content,
+            "path": str(domain_path),
+            "size_chars": len(content),
+        }
+    except Exception as e:
+        return {"error": f"Failed to read domain file: {e}"}
+
+
+def handle_route(params: dict) -> dict:
+    """Classify a query by domain and complexity tier.
+
+    Returns the recommended domain file(s) to load and the tier level.
+    Uses keyword matching against the ROUTER.md domain registry.
+    """
+    root = _resolve_root()
+    query = params.get("query", "").lower()
+
+    if not query:
+        return {"error": "query required"}
+
+    router_path = root / "prompts" / "ROUTER.md"
+    domains_dir = root / "prompts" / "domains"
+
+    available_domains = [f.stem for f in domains_dir.glob("*.md")] if domains_dir.exists() else []
+
+    scores = {}
+    for domain in available_domains:
+        keywords = domain.replace("-", " ").split()
+        score = sum(1 for kw in keywords if kw in query)
+        if score > 0:
+            scores[domain] = score
+
+    if not scores:
+        return {
+            "domain": None,
+            "tier": 1,
+            "confidence": 0.0,
+            "message": "No domain match found. Consider creating a new domain file.",
+            "available_domains": available_domains,
+        }
+
+    best_domain = max(scores, key=scores.get)
+    confidence = min(scores[best_domain] / 3.0, 1.0)
+
+    word_count = len(query.split())
+    if word_count <= 15:
+        tier = 1
+    elif word_count <= 50:
+        tier = 2
+    else:
+        tier = 3
+
+    return {
+        "domain": best_domain,
+        "tier": tier,
+        "confidence": round(confidence, 2),
+        "domain_file": f"prompts/domains/{best_domain}.md",
+        "all_matches": dict(sorted(scores.items(), key=lambda x: -x[1])[:5]),
+    }
+
+
+def handle_knowledge_gaps(params: dict) -> dict:
+    """Get knowledge gap analysis."""
+    from .store import Store
+
+    config = _get_config()
+    store = Store(config.db_path, config.store_dir)
+
+    domain_stats = store.get_domain_difficulty_stats()
+    hard_queries = store.get_hard_queries(min_difficulty=0.7, limit=10)
+    store.close()
+
+    return {
+        "domain_difficulty": domain_stats,
+        "hard_queries": hard_queries,
+    }
+
+
 # MCP protocol implementation (stdio JSON-RPC)
 
 TOOLS = {
@@ -205,6 +416,118 @@ TOOLS = {
             "properties": {},
         },
         "handler": handle_stats,
+    },
+    "submit_feedback": {
+        "description": (
+            "Record positive (+1) or negative (-1) feedback for a retrieved chunk. "
+            "Feedback trains the retrieval scoring system over time."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "chunk_id": {
+                    "type": "integer",
+                    "description": "The chunk ID to rate",
+                },
+                "query": {
+                    "type": "string",
+                    "description": "The query this chunk was retrieved for",
+                },
+                "rating": {
+                    "type": "integer",
+                    "description": "+1 for helpful, -1 for unhelpful",
+                    "enum": [-1, 1],
+                },
+            },
+            "required": ["chunk_id", "rating"],
+        },
+        "handler": handle_feedback,
+    },
+    "log_routing": {
+        "description": (
+            "Log a routing decision. Call this after classifying a request "
+            "to accumulate training data for the neural router."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "The user's query",
+                },
+                "domain": {
+                    "type": "string",
+                    "description": "The assigned domain",
+                },
+                "confidence": {
+                    "type": "number",
+                    "description": "Routing confidence (0.0-1.0)",
+                },
+            },
+            "required": ["query", "domain"],
+        },
+        "handler": handle_log_routing,
+    },
+    "knowledge_gaps": {
+        "description": (
+            "Get knowledge gap analysis: which domains the system struggles with "
+            "and which queries were hardest to answer."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+        },
+        "handler": handle_knowledge_gaps,
+    },
+    "list_domains": {
+        "description": (
+            "List all available domain expertise files in the knowledge system. "
+            "Returns domain names, titles, and file paths."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+        },
+        "handler": handle_list_domains,
+    },
+    "get_domain_expertise": {
+        "description": (
+            "Load a domain expertise file by name. Returns the full content of "
+            "the domain file including frameworks, quality standards, and anti-patterns. "
+            "Use list_domains first to see available domains."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "type": "string",
+                    "description": (
+                        "Domain name (e.g. 'software-dev', 'business-consulting'). "
+                        "Use list_domains to see available names."
+                    ),
+                },
+            },
+            "required": ["domain"],
+        },
+        "handler": handle_get_domain,
+    },
+    "route_request": {
+        "description": (
+            "Classify a query by domain and complexity tier. Returns the recommended "
+            "domain file to load and whether it needs Tier 1 (quick), Tier 2 (standard), "
+            "or Tier 3 (full pipeline) treatment."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "The user's request to classify",
+                },
+            },
+            "required": ["query"],
+        },
+        "handler": handle_route,
     },
 }
 

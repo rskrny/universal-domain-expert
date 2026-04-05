@@ -31,40 +31,73 @@ Load when the domain file references them or when working across domains.
 These chunks contain deep reference material for specific domains.
 Load only when working within that domain AND the depth requires it.
 
+**Current state:** Domain files are self-sufficient for Tier 1-2 work. Context
+chunks below will be created as Tier 3 engagements demand deeper reference material.
+
 ### Business Consulting
 | File | Description | Load When |
 |------|-------------|-----------|
-| (to be created as needed) | Industry-specific benchmarks and data | Industry-specific engagements |
+| (create as needed) | Industry benchmarks, M&A data, operational metrics | Industry-specific Tier 3 engagements |
 
 ### Context Engineering
 | File | Description | Load When |
 |------|-------------|-----------|
-| (to be created as needed) | Embedding model benchmarks, retrieval evaluation datasets | Deep retrieval system tuning |
+| (create as needed) | Embedding model benchmarks, retrieval evaluation datasets | Deep retrieval system tuning |
 
-### Course Creation
+### GTM Strategy
 | File | Description | Load When |
 |------|-------------|-----------|
-| (to be created) | | |
+| (create as needed) | Channel benchmarks, CAC by industry, launch case studies | Tier 3 launch planning |
+
+### Software Development
+| File | Description | Load When |
+|------|-------------|-----------|
+| (create as needed) | Architecture decision records, technology benchmarks | System design engagements |
 
 ### Business Law
 | File | Description | Load When |
 |------|-------------|-----------|
-| (to be created) | | |
+| (create as needed) | Contract templates, regulatory checklists by jurisdiction | Contract review or compliance work |
 
 ### Accounting & Tax
 | File | Description | Load When |
 |------|-------------|-----------|
-| (to be created) | | |
+| (create as needed) | Tax brackets, GAAP standards reference, SaaS metrics benchmarks | Financial modeling or tax planning |
+
+### Course Creation
+| File | Description | Load When |
+|------|-------------|-----------|
+| (create as needed) | Platform comparison data, completion rate benchmarks | Course design Tier 3 |
 
 ### Research & Authorship
 | File | Description | Load When |
 |------|-------------|-----------|
-| (to be created) | | |
+| (create as needed) | Journal databases, citation style guides, statistical test selection | Academic writing Tier 3 |
 
-### Go-to-Market Strategy
+### Product Design & UX
 | File | Description | Load When |
 |------|-------------|-----------|
-| (to be created) | | |
+| (create as needed) | Heuristic evaluation templates, accessibility checklists, component libraries | Design audit Tier 3 |
+
+### Data Analytics
+| File | Description | Load When |
+|------|-------------|-----------|
+| (create as needed) | SQL patterns, statistical test reference, dashboard design templates | Analytics Tier 3 |
+
+### Marketing & Content
+| File | Description | Load When |
+|------|-------------|-----------|
+| (create as needed) | SEO keyword research data, email sequence templates, content calendars | Marketing execution Tier 3 |
+
+### Psychology & Persuasion
+| File | Description | Load When |
+|------|-------------|-----------|
+| (create as needed) | Bias catalog, pricing experiment case studies, conversion benchmarks | Conversion optimization Tier 3 |
+
+### Operations & Automation
+| File | Description | Load When |
+|------|-------------|-----------|
+| (create as needed) | SOP templates, tool comparison matrices, automation cost calculators | Operations design Tier 3 |
 
 ---
 
@@ -82,7 +115,7 @@ Load only when working within that domain AND the depth requires it.
    Rule: never load more than 3 context chunks per request.
 
 3. **Indexing:** After creating or modifying context files, run
-   `python -m retrieval index` to update the search index.
+   `python scripts/maintain.py` to update the search index and knowledge graph.
 
 4. **Updating:** Context chunks should be updated when the information they contain
    becomes outdated. Date-stamp all data-heavy chunks.

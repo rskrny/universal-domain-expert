@@ -44,6 +44,7 @@ class Store:
                 end_line INTEGER,
                 content_type TEXT DEFAULT 'prose',
                 domain TEXT,
+                project TEXT,
                 tags TEXT,
                 token_estimate INTEGER,
                 content_hash TEXT
@@ -60,11 +61,76 @@ class Store:
                 value TEXT
             );
 
+            CREATE TABLE IF NOT EXISTS feedback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                chunk_id INTEGER NOT NULL,
+                query_hash TEXT NOT NULL,
+                query_text TEXT,
+                rating INTEGER NOT NULL,
+                created_at REAL NOT NULL,
+                FOREIGN KEY (chunk_id) REFERENCES chunks(id)
+            );
+
+            CREATE TABLE IF NOT EXISTS difficulty_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                query_text TEXT NOT NULL,
+                query_hash TEXT NOT NULL,
+                top_score REAL,
+                score_gap REAL,
+                result_count INTEGER,
+                domain TEXT,
+                difficulty_score REAL,
+                created_at REAL NOT NULL
+            );
+
             CREATE INDEX IF NOT EXISTS idx_chunks_source ON chunks(source_file);
             CREATE INDEX IF NOT EXISTS idx_chunks_domain ON chunks(domain);
             CREATE INDEX IF NOT EXISTS idx_chunks_hash ON chunks(content_hash);
             CREATE INDEX IF NOT EXISTS idx_chunks_type ON chunks(content_type);
+            CREATE INDEX IF NOT EXISTS idx_feedback_chunk ON feedback(chunk_id);
+            CREATE INDEX IF NOT EXISTS idx_feedback_query ON feedback(query_hash);
+            CREATE INDEX IF NOT EXISTS idx_difficulty_domain ON difficulty_log(domain);
+
+            CREATE TABLE IF NOT EXISTS enrichment_cache (
+                chunk_id INTEGER PRIMARY KEY,
+                enriched_text TEXT NOT NULL,
+                created_at REAL NOT NULL,
+                FOREIGN KEY (chunk_id) REFERENCES chunks(id)
+            );
         """)
+        self.conn.commit()
+        # Migration: ensure routing_log table has the right schema
+        try:
+            self.conn.execute("SELECT assigned_domain FROM routing_log LIMIT 1")
+        except sqlite3.OperationalError:
+            # Table either doesn't exist or has different columns
+            try:
+                self.conn.execute("""
+                    CREATE TABLE IF NOT EXISTS routing_log (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        query_text TEXT NOT NULL,
+                        assigned_domain TEXT NOT NULL,
+                        confidence REAL,
+                        user_corrected INTEGER DEFAULT 0,
+                        corrected_domain TEXT,
+                        created_at REAL NOT NULL
+                    )
+                """)
+                self.conn.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_routing_log_domain ON routing_log(assigned_domain)"
+                )
+                self.conn.commit()
+            except sqlite3.OperationalError:
+                pass  # Table exists with incompatible schema, skip routing features
+
+        # Migration: add project column if it doesn't exist (for existing databases)
+        try:
+            self.conn.execute("SELECT project FROM chunks LIMIT 1")
+        except sqlite3.OperationalError:
+            self.conn.execute("ALTER TABLE chunks ADD COLUMN project TEXT")
+            self.conn.commit()
+        # Create project index (safe to run after migration)
+        self.conn.execute("CREATE INDEX IF NOT EXISTS idx_chunks_project ON chunks(project)")
         self.conn.commit()
 
     # --- Chunk operations ---
@@ -86,6 +152,7 @@ class Store:
                 c.end_line,
                 c.content_type,
                 c.domain,
+                getattr(c, "project", None),
                 json.dumps(c.tags),
                 len(c.text) // 4,
                 c.content_hash,
@@ -93,8 +160,8 @@ class Store:
         self.conn.executemany(
             """INSERT INTO chunks
                (text, source_file, header_path, chunk_index, start_line,
-                end_line, content_type, domain, tags, token_estimate, content_hash)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                end_line, content_type, domain, project, tags, token_estimate, content_hash)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             rows,
         )
         self.conn.commit()
@@ -106,7 +173,7 @@ class Store:
     def get_all_chunks(self) -> list[dict]:
         cursor = self.conn.execute(
             "SELECT id, text, source_file, header_path, chunk_index, "
-            "start_line, end_line, content_type, domain, tags, "
+            "start_line, end_line, content_type, domain, project, tags, "
             "token_estimate, content_hash FROM chunks ORDER BY id"
         )
         results = []
@@ -121,6 +188,7 @@ class Store:
                 "end_line": row["end_line"],
                 "content_type": row["content_type"] or "prose",
                 "domain": row["domain"],
+                "project": row["project"],
                 "tags": json.loads(row["tags"] or "[]"),
                 "token_estimate": row["token_estimate"],
                 "content_hash": row["content_hash"] or "",
@@ -303,18 +371,23 @@ class Store:
 
     # --- Graph data (for visualization) ---
 
-    def get_chunk_relationships(self) -> dict:
+    def get_chunk_relationships(self, use_semantic_edges: bool = True) -> dict:
         """
         Extract relationships between chunks for knowledge graph viz.
-        Links chunks that share the same source file or domain.
-        Includes full metadata for detail panel display.
+
+        Three types of edges:
+        1. sequence: Adjacent chunks within the same file (structural)
+        2. semantic: Chunks with high embedding cosine similarity (intelligent)
+        3. cross-domain: Semantic connections that cross domain boundaries (bridges)
+
+        Semantic edges make the graph an actual neural network where connections
+        represent meaning, not just file proximity.
         """
         chunks = self.get_all_chunks()
         nodes = []
         edges = []
 
         file_groups: dict[str, list[int]] = {}
-        domain_groups: dict[str, list[int]] = {}
 
         for c in chunks:
             nodes.append({
@@ -330,12 +403,9 @@ class Store:
                 "end_line": c["end_line"],
                 "content_hash": c["content_hash"],
             })
-
             file_groups.setdefault(c["source_file"], []).append(c["id"])
-            if c["domain"]:
-                domain_groups.setdefault(c["domain"], []).append(c["id"])
 
-        # File-level edges (sequential chunks within a file)
+        # Structural edges (sequential chunks within a file)
         for file_path, chunk_ids in file_groups.items():
             for i in range(len(chunk_ids) - 1):
                 edges.append({
@@ -344,18 +414,202 @@ class Store:
                     "type": "sequence",
                 })
 
-        # Domain-level edges (shared domain)
-        for domain, chunk_ids in domain_groups.items():
-            if len(chunk_ids) <= 30:
-                for i in range(len(chunk_ids)):
-                    for j in range(i + 1, min(i + 3, len(chunk_ids))):
-                        edges.append({
-                            "source": chunk_ids[i],
-                            "target": chunk_ids[j],
-                            "type": "domain",
-                        })
+        # Semantic edges (real neural connections based on meaning)
+        if use_semantic_edges:
+            semantic_edges = self._compute_semantic_edges(chunks)
+            edges.extend(semantic_edges)
 
         return {"nodes": nodes, "edges": edges}
+
+    def _compute_semantic_edges(self, chunks: list[dict], threshold: float = 0.55,
+                                 max_edges_per_node: int = 4) -> list[dict]:
+        """
+        Compute edges based on embedding cosine similarity.
+
+        This is what makes the graph a real neural network. Each node connects
+        to its most semantically similar nodes across the entire knowledge base.
+        Cross-domain connections are especially valuable because they represent
+        novel conceptual bridges.
+        """
+        import numpy as np
+
+        embeddings = self.load_embeddings()
+        if embeddings is None or len(embeddings) == 0:
+            return []
+
+        n = min(len(chunks), len(embeddings))
+        if n == 0:
+            return []
+
+        # Normalize for cosine similarity
+        norms = np.linalg.norm(embeddings[:n], axis=1, keepdims=True)
+        norms[norms == 0] = 1
+        normed = embeddings[:n] / norms
+
+        # Compute similarity matrix
+        sim_matrix = normed @ normed.T
+
+        # Zero out self-similarity
+        np.fill_diagonal(sim_matrix, 0)
+
+        edges = []
+        edge_set = set()
+
+        for i in range(n):
+            # Get top similar chunks for this node
+            similarities = sim_matrix[i]
+            top_indices = np.argsort(similarities)[::-1][:max_edges_per_node]
+
+            for j in top_indices:
+                if j >= n:
+                    continue
+                sim = float(similarities[j])
+                if sim < threshold:
+                    continue
+
+                # Avoid duplicate edges
+                edge_key = (min(chunks[i]["id"], chunks[j]["id"]),
+                           max(chunks[i]["id"], chunks[j]["id"]))
+                if edge_key in edge_set:
+                    continue
+                edge_set.add(edge_key)
+
+                # Classify: cross-domain connections are conceptual bridges
+                same_domain = chunks[i]["domain"] == chunks[j]["domain"]
+                same_file = chunks[i]["source_file"] == chunks[j]["source_file"]
+
+                if same_file:
+                    continue  # Skip same-file connections (already have sequence edges)
+
+                edge_type = "semantic" if same_domain else "cross-domain"
+
+                edges.append({
+                    "source": chunks[i]["id"],
+                    "target": chunks[j]["id"],
+                    "type": edge_type,
+                    "weight": round(sim, 3),
+                })
+
+        return edges
+
+    # --- Feedback operations ---
+
+    def add_feedback(self, chunk_id: int, query_text: str, rating: int):
+        """Record feedback (+1 or -1) for a chunk in response to a query."""
+        import hashlib
+        import time
+        query_hash = hashlib.sha256(query_text.encode()).hexdigest()[:16]
+        self.conn.execute(
+            "INSERT INTO feedback (chunk_id, query_hash, query_text, rating, created_at) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (chunk_id, query_hash, query_text, rating, time.time()),
+        )
+        self.conn.commit()
+
+    def get_chunk_feedback_scores(self) -> dict[int, float]:
+        """Return average feedback score per chunk. Range: -1.0 to +1.0."""
+        cursor = self.conn.execute(
+            "SELECT chunk_id, AVG(rating) as avg_rating, COUNT(*) as cnt "
+            "FROM feedback GROUP BY chunk_id HAVING cnt >= 1"
+        )
+        return {row["chunk_id"]: row["avg_rating"] for row in cursor}
+
+    def feedback_count(self) -> int:
+        cursor = self.conn.execute("SELECT COUNT(*) as cnt FROM feedback")
+        return cursor.fetchone()["cnt"]
+
+    # --- Routing log operations ---
+
+    def log_routing(self, query_text: str, domain: str, confidence: float = 0.0):
+        import time
+        self.conn.execute(
+            "INSERT INTO routing_log (query_text, assigned_domain, confidence, created_at) "
+            "VALUES (?, ?, ?, ?)",
+            (query_text, domain, confidence, time.time()),
+        )
+        self.conn.commit()
+
+    def correct_routing(self, log_id: int, correct_domain: str):
+        self.conn.execute(
+            "UPDATE routing_log SET user_corrected = 1, corrected_domain = ? WHERE id = ?",
+            (correct_domain, log_id),
+        )
+        self.conn.commit()
+
+    def get_routing_training_data(self) -> list[dict]:
+        """Get routing logs that have been user-corrected (for training)."""
+        cursor = self.conn.execute(
+            "SELECT query_text, corrected_domain as domain FROM routing_log "
+            "WHERE user_corrected = 1 "
+            "UNION ALL "
+            "SELECT query_text, assigned_domain as domain FROM routing_log "
+            "WHERE user_corrected = 0"
+        )
+        return [dict(row) for row in cursor]
+
+    def routing_log_count(self) -> int:
+        cursor = self.conn.execute("SELECT COUNT(*) as cnt FROM routing_log")
+        return cursor.fetchone()["cnt"]
+
+    # --- Difficulty log operations ---
+
+    def log_difficulty(self, query_text: str, top_score: float, score_gap: float,
+                       result_count: int, domain: str, difficulty_score: float):
+        import hashlib
+        import time
+        query_hash = hashlib.sha256(query_text.encode()).hexdigest()[:16]
+        self.conn.execute(
+            "INSERT INTO difficulty_log "
+            "(query_text, query_hash, top_score, score_gap, result_count, domain, difficulty_score, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (query_text, query_hash, top_score, score_gap, result_count, domain, difficulty_score, time.time()),
+        )
+        self.conn.commit()
+
+    def get_hard_queries(self, min_difficulty: float = 0.7, limit: int = 20) -> list[dict]:
+        """Return queries the system struggled with, grouped by domain."""
+        cursor = self.conn.execute(
+            "SELECT query_text, domain, difficulty_score, created_at "
+            "FROM difficulty_log WHERE difficulty_score >= ? "
+            "ORDER BY difficulty_score DESC LIMIT ?",
+            (min_difficulty, limit),
+        )
+        return [dict(row) for row in cursor]
+
+    def get_domain_difficulty_stats(self) -> list[dict]:
+        """Average difficulty by domain. High = knowledge gaps."""
+        cursor = self.conn.execute(
+            "SELECT domain, AVG(difficulty_score) as avg_difficulty, "
+            "COUNT(*) as query_count "
+            "FROM difficulty_log GROUP BY domain "
+            "ORDER BY avg_difficulty DESC"
+        )
+        return [dict(row) for row in cursor]
+
+    # --- Enrichment cache ---
+
+    def save_enriched_texts(self, enrichments: list[tuple[int, str]]):
+        """Bulk save enriched texts. enrichments = [(chunk_id, enriched_text), ...]"""
+        import time
+        now = time.time()
+        self.conn.executemany(
+            "INSERT OR REPLACE INTO enrichment_cache (chunk_id, enriched_text, created_at) "
+            "VALUES (?, ?, ?)",
+            [(cid, text, now) for cid, text in enrichments],
+        )
+        self.conn.commit()
+
+    def get_enriched_texts(self) -> dict[int, str]:
+        """Return {chunk_id: enriched_text} for all cached enrichments."""
+        cursor = self.conn.execute(
+            "SELECT chunk_id, enriched_text FROM enrichment_cache"
+        )
+        return {row["chunk_id"]: row["enriched_text"] for row in cursor}
+
+    def clear_enrichment_cache(self):
+        """Clear all cached enrichments (e.g. before full reindex)."""
+        self.conn.execute("DELETE FROM enrichment_cache")
+        self.conn.commit()
 
     def close(self):
         self.conn.close()

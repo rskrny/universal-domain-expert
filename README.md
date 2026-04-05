@@ -93,15 +93,10 @@ messages = [
 9. **Incremental indexing with deduplication**. File hash tracking means only
    changed files get re-indexed. SHA-256 content hashing prevents duplicate chunks.
 
-10. **Interactive knowledge graph**. D3.js force-directed visualization with
-    clickable detail panels, domain and content-type filters, token sparkline,
-    and minimap. Includes a token budget dashboard with charts.
+10. **Interactive knowledge graph**. D3.js force-directed visualization showing
+    chunks, domains, and relationships. Search, zoom, hover for previews.
 
-11. **Quality test suite**. 30 automated tests covering chunking, incremental
-    indexing, deduplication, search relevance, token optimization, and
-    visualization generation.
-
-12. **MCP server**. Native Claude Code integration via `search_knowledge`,
+11. **MCP server**. Native Claude Code integration via `search_knowledge`,
     `get_context`, `rebuild_index`, and `index_stats` tools.
 
 ---
@@ -132,10 +127,6 @@ python -m retrieval viz --open         # Generate and open in browser
 
 # Statistics
 python -m retrieval stats
-
-# Quality tests (30 tests across 6 categories)
-python -m retrieval test
-python -m retrieval test --verbose
 ```
 
 ---
@@ -248,9 +239,8 @@ retrieval/                         # Knowledge retrieval engine
   searcher.py                      # Hybrid BM25 + semantic search
   optimizer.py                     # Token budget optimizer (MMR + density)
   store.py                         # SQLite with WAL + file hash tracking
-  visualize.py                     # D3.js knowledge graph + token dashboard
-  test_quality.py                  # 30-test quality suite
-  cli.py                           # CLI interface (index, search, context, viz, stats, test)
+  visualize.py                     # D3.js knowledge graph generator
+  cli.py                           # CLI interface
   mcp_server.py                    # MCP server for Claude Code
   requirements.txt                 # Python dependencies
   knowledge-graph.html             # Generated interactive visualization

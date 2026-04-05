@@ -1,19 +1,39 @@
-# Generated indexes (rebuilt on setup)
-retrieval/store/
-retrieval/knowledge-graph.html
-
 # Python
 __pycache__/
 *.pyc
 *.pyo
 *.egg-info/
-dist/
-build/
+.eggs/
 
-# OS
-.DS_Store
-Thumbs.db
+# Retrieval store (large binary files, rebuild with `python -m retrieval index`)
+retrieval/store/
+retrieval/knowledge-graph.html
 
-# IDE
+# Neural router artifacts (rebuild with `python scripts/neural_router.py train`)
+state/neural_router/*.npy
+
+# Binaries
+*.exe
+
+# Misplaced project files (should live in their own project directory)
+FinModel AI-financial-model.xlsx
+
+# IDE / Editor
 .vscode/
 .idea/
+
+# Environment
+.env
+.env.*
+*.log
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Wrangler state
+.wrangler/
+
+# Temp files
+*.tmp
+*.bak

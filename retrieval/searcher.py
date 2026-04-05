@@ -5,12 +5,12 @@ Combines BM25 (lexical) and semantic (vector) retrieval
 using Reciprocal Rank Fusion for stable, high-quality results.
 """
 
-import re
 from typing import Optional
 from dataclasses import dataclass
 
 from .config import RetrievalConfig
 from .store import Store
+from .tokenizer import tokenize
 
 
 @dataclass
@@ -33,13 +33,6 @@ class SearchResult:
         if self.header_path:
             parts.append(" > ".join(self.header_path))
         return " | ".join(parts)
-
-
-def _tokenize(text: str) -> list[str]:
-    """Match the tokenizer used at index time."""
-    text = text.lower()
-    text = re.sub(r"[^\w\s]", " ", text)
-    return [t for t in text.split() if len(t) > 1]
 
 
 def _reciprocal_rank_fusion(
@@ -69,16 +62,20 @@ def _reciprocal_rank_fusion(
 class Searcher:
     """Hybrid BM25 + semantic search with reciprocal rank fusion."""
 
-    def __init__(self, config: RetrievalConfig):
+    def __init__(self, config: RetrievalConfig, adapter=None):
         self.config = config
         self.store = Store(config.db_path, config.store_dir)
         self.bm25 = self.store.load_bm25()
         self.embeddings = None
         self.model = None
         self._chunks = None
+        self.adapter = adapter
 
         if config.use_semantic:
             self.embeddings = self.store.load_embeddings()
+            # Apply embedding adapter if available and trained
+            if self.adapter and self.adapter.is_ready and self.embeddings is not None:
+                self.embeddings = self.adapter.adapt(self.embeddings)
 
     @property
     def chunks(self) -> list[dict]:
@@ -121,10 +118,28 @@ class Searcher:
 
         # Build chunk_id to index mapping
         id_to_idx = {c["id"]: i for i, c in enumerate(chunks)}
+
+        # Pre-compute the set of allowed chunk IDs when filters are active.
+        # This ensures filtered chunks are excluded BEFORE ranking and fusion,
+        # so top-k always returns the best K results within the filter scope.
+        allowed_ids = None
+        if domain_filter or file_filter:
+            allowed_ids = set()
+            for c in chunks:
+                if domain_filter and c["domain"] != domain_filter:
+                    continue
+                if file_filter and file_filter not in c["source_file"]:
+                    continue
+                allowed_ids.add(c["id"])
+            if not allowed_ids:
+                return []
+
         rerank_n = self.config.rerank_top_n
 
         # BM25 retrieval
         bm25_ranked = self._bm25_search(query, rerank_n)
+        if allowed_ids is not None:
+            bm25_ranked = [cid for cid in bm25_ranked if cid in allowed_ids]
 
         ranked_lists = [bm25_ranked]
         weights = [self.config.bm25_weight]
@@ -132,11 +147,24 @@ class Searcher:
         # Semantic retrieval
         if self.config.use_semantic and self.embeddings is not None:
             semantic_ranked = self._semantic_search(query, rerank_n)
+            if allowed_ids is not None:
+                semantic_ranked = [cid for cid in semantic_ranked if cid in allowed_ids]
             ranked_lists.append(semantic_ranked)
             weights.append(self.config.semantic_weight)
 
         # Fuse
         fused = _reciprocal_rank_fusion(ranked_lists, weights)
+
+        # Apply feedback boost: chunks with positive feedback get a score bump
+        feedback_scores = self.store.get_chunk_feedback_scores()
+        if feedback_scores:
+            boosted = []
+            for chunk_id, score in fused:
+                fb = feedback_scores.get(chunk_id, 0.0)
+                # Feedback multiplier: +10% per point of avg feedback
+                boosted_score = score * (1.0 + 0.1 * fb)
+                boosted.append((chunk_id, boosted_score))
+            fused = sorted(boosted, key=lambda x: x[1], reverse=True)
 
         # Build results with rank info
         bm25_rank_map = {cid: rank for rank, cid in enumerate(bm25_ranked)}
@@ -149,12 +177,6 @@ class Searcher:
             if chunk_id not in id_to_idx:
                 continue
             chunk = chunks[id_to_idx[chunk_id]]
-
-            # Apply filters
-            if domain_filter and chunk["domain"] != domain_filter:
-                continue
-            if file_filter and file_filter not in chunk["source_file"]:
-                continue
 
             results.append(SearchResult(
                 chunk_id=chunk_id,
@@ -171,11 +193,38 @@ class Searcher:
             if len(results) >= top_k:
                 break
 
+        # Log query difficulty for gap detection
+        self._log_difficulty(query, results, domain_filter)
+
         return results
+
+    def _log_difficulty(self, query: str, results: list[SearchResult],
+                        domain: Optional[str] = None):
+        """Compute and log how hard this query was for the retrieval system."""
+        if not results:
+            self.store.log_difficulty(query, 0.0, 0.0, 0, domain or "unknown", 1.0)
+            return
+
+        top_score = results[0].score
+        second_score = results[1].score if len(results) > 1 else 0.0
+        score_gap = top_score - second_score
+
+        # Difficulty heuristic: low top score + small gap = hard query
+        # Normalized so 0 = easy, 1 = very hard
+        # top_score typically ranges 0.001 to 0.02 for RRF scores
+        score_confidence = min(top_score / 0.015, 1.0)
+        gap_confidence = min(score_gap / 0.005, 1.0)
+        difficulty = 1.0 - (0.6 * score_confidence + 0.4 * gap_confidence)
+        difficulty = max(0.0, min(1.0, difficulty))
+
+        result_domain = domain or (results[0].domain if results else "unknown")
+        self.store.log_difficulty(
+            query, top_score, score_gap, len(results), result_domain, difficulty
+        )
 
     def _bm25_search(self, query: str, top_n: int) -> list[int]:
         """Return chunk IDs ranked by BM25 score."""
-        tokens = _tokenize(query)
+        tokens = tokenize(query)
         if not tokens or self.bm25 is None:
             return []
 
@@ -240,7 +289,123 @@ class Searcher:
             ))
         return results
 
+    def search_hyde(
+        self,
+        query: str,
+        top_k: Optional[int] = None,
+        domain_filter: Optional[str] = None,
+    ) -> list[SearchResult]:
+        """
+        Hypothetical Document Embedding (HyDE) search.
+
+        Instead of searching with the raw query, this method:
+        1. Finds the top BM25 result for the query
+        2. Uses that result's text as a "hypothetical answer"
+        3. Searches semantically using the hypothetical answer
+
+        This bridges the vocabulary gap between queries and documents.
+        Works without any LLM API calls by using the best BM25 match
+        as a proxy for a hypothetical answer.
+        """
+        if top_k is None:
+            top_k = self.config.default_top_k
+
+        if not self.config.use_semantic or self.embeddings is None:
+            # Fall back to regular search if semantic is unavailable
+            return self.search(query, top_k, domain_filter)
+
+        # Step 1: Get top BM25 result as pseudo-document
+        bm25_results = self._bm25_search(query, top_n=3)
+        if not bm25_results:
+            return self.search(query, top_k, domain_filter)
+
+        # Build the hypothetical document from top BM25 matches
+        id_to_idx = {c["id"]: i for i, c in enumerate(self.chunks)}
+        hypo_parts = []
+        for cid in bm25_results[:2]:
+            if cid in id_to_idx:
+                chunk_text = self.chunks[id_to_idx[cid]]["text"]
+                hypo_parts.append(chunk_text[:500])
+
+        if not hypo_parts:
+            return self.search(query, top_k, domain_filter)
+
+        hypo_doc = f"{query}\n\n" + "\n".join(hypo_parts)
+
+        # Step 2: Encode the hypothetical document
+        import numpy as np
+        model = self._get_semantic_model()
+        hypo_emb = model.encode([hypo_doc], normalize_embeddings=True)[0]
+
+        # Step 3: Find chunks most similar to the hypothetical document
+        similarities = np.dot(self.embeddings, hypo_emb)
+
+        # Apply domain filter
+        allowed_ids = None
+        if domain_filter:
+            allowed_ids = set()
+            for c in self.chunks:
+                if c["domain"] == domain_filter:
+                    allowed_ids.add(c["id"])
+
+        ranked_indices = np.argsort(similarities)[::-1]
+
+        # Step 4: Fuse HyDE semantic results with original BM25 results
+        hyde_ranked = []
+        for idx in ranked_indices:
+            if idx >= len(self.chunks):
+                continue
+            cid = self.chunks[idx]["id"]
+            if allowed_ids is not None and cid not in allowed_ids:
+                continue
+            if similarities[idx] > 0.1:
+                hyde_ranked.append(cid)
+            if len(hyde_ranked) >= self.config.rerank_top_n:
+                break
+
+        # Fuse: BM25 + HyDE semantic (replacing regular semantic)
+        bm25_for_fusion = self._bm25_search(query, self.config.rerank_top_n)
+        if allowed_ids is not None:
+            bm25_for_fusion = [cid for cid in bm25_for_fusion if cid in allowed_ids]
+
+        fused = _reciprocal_rank_fusion(
+            [bm25_for_fusion, hyde_ranked],
+            [self.config.bm25_weight, self.config.semantic_weight],
+        )
+
+        # Apply feedback boost
+        feedback_scores = self.store.get_chunk_feedback_scores()
+        if feedback_scores:
+            boosted = []
+            for chunk_id, score in fused:
+                fb = feedback_scores.get(chunk_id, 0.0)
+                boosted_score = score * (1.0 + 0.1 * fb)
+                boosted.append((chunk_id, boosted_score))
+            fused = sorted(boosted, key=lambda x: x[1], reverse=True)
+
+        # Build results
+        results = []
+        for chunk_id, score in fused:
+            if chunk_id not in id_to_idx:
+                continue
+            chunk = self.chunks[id_to_idx[chunk_id]]
+            results.append(SearchResult(
+                chunk_id=chunk_id,
+                text=chunk["text"],
+                source_file=chunk["source_file"],
+                header_path=chunk["header_path"],
+                domain=chunk["domain"],
+                tags=chunk["tags"],
+                score=score,
+            ))
+            if len(results) >= top_k:
+                break
+
+        self._log_difficulty(query, results, domain_filter)
+        return results
+
     def get_stats(self) -> dict:
+        feedback_count = self.store.feedback_count()
         return {
             "total_chunks": len(self.chunks),
             "domains": self.store.list_domains(),
@@ -248,6 +413,7 @@ class Searcher:
             "bm25_loaded": self.bm25 is not None,
             "semantic_loaded": self.embeddings is not None,
             "last_indexed": self.store.get_meta("last_indexed"),
+            "feedback_entries": feedback_count,
         }
 
     def close(self):

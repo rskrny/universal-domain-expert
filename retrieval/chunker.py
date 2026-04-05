@@ -17,6 +17,23 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 
+def scrub_pii(text: str) -> str:
+    """Remove PII patterns from text before indexing.
+
+    Strips SSN (XXX-XX-XXXX), EIN (XX-XXXXXXX), and long digit sequences
+    that look like account numbers. Replaces with [REDACTED].
+    """
+    # SSN pattern: 3-2-4 digits
+    text = re.sub(r'\b\d{3}-\d{2}-\d{4}\b', '[REDACTED-SSN]', text)
+    # EIN pattern: 2-7 digits
+    text = re.sub(r'\b\d{2}-\d{7}\b', '[REDACTED-EIN]', text)
+    # Bank account numbers: 10+ consecutive digits (not years like 2025)
+    text = re.sub(r'\b\d{10,}\b', '[REDACTED-ACCT]', text)
+    # Credit card patterns: 4-4-4-4 or 16 digits
+    text = re.sub(r'\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b', '[REDACTED-CC]', text)
+    return text
+
+
 @dataclass
 class Chunk:
     """A single retrievable unit of knowledge."""
@@ -29,6 +46,7 @@ class Chunk:
     end_line: int
     content_type: str = "prose"  # prose, code, table, metadata, mixed
     domain: Optional[str] = None
+    project: Optional[str] = None  # project registry key (e.g. "the-flip-side")
     tags: list[str] = field(default_factory=list)
     content_hash: str = ""    # SHA-256 of text for dedup
 
@@ -57,6 +75,7 @@ class Chunk:
             "end_line": self.end_line,
             "content_type": self.content_type,
             "domain": self.domain,
+            "project": self.project,
             "tags": self.tags,
             "content_hash": self.content_hash,
         }
@@ -162,18 +181,23 @@ def _get_protected_block(line_num: int, blocks: list[ProtectedBlock]) -> Optiona
 
 # --- Domain and tag extraction ---
 
-def _extract_domain(file_path: str) -> Optional[str]:
-    """Infer domain from file path."""
+def _extract_domain(file_path: str, domain_aliases: Optional[dict] = None) -> Optional[str]:
+    """Infer domain from file path and normalize via alias mapping."""
     parts = Path(file_path).parts
+    domain = None
     if "domains" in parts:
         idx = list(parts).index("domains")
         if idx + 1 < len(parts):
-            return Path(parts[idx + 1]).stem
-    if "by-domain" in parts:
+            domain = Path(parts[idx + 1]).stem
+    elif "by-domain" in parts:
         idx = list(parts).index("by-domain")
         if idx + 1 < len(parts):
-            return parts[idx + 1]
-    return None
+            domain = parts[idx + 1]
+
+    if domain and domain_aliases:
+        domain = domain_aliases.get(domain, domain)
+
+    return domain
 
 
 def _extract_tags(text: str) -> list[str]:
@@ -214,6 +238,7 @@ def chunk_markdown(
     overlap_tokens: int = 64,
     min_chunk_length: int = 50,
     split_on_headers: bool = True,
+    domain_aliases: Optional[dict] = None,
 ) -> list[Chunk]:
     """
     Split a markdown file into chunks with fence-aware boundaries.
@@ -229,7 +254,7 @@ def chunk_markdown(
     if not content.strip():
         return []
 
-    domain = _extract_domain(source_file)
+    domain = _extract_domain(source_file, domain_aliases)
     file_tags = _extract_tags(content)
     lines = content.split("\n")
 
@@ -444,6 +469,7 @@ def chunk_code(
     source_file: str,
     max_tokens: int = 512,
     min_chunk_length: int = 50,
+    domain_aliases: Optional[dict] = None,
 ) -> list[Chunk]:
     """
     Split code files by function/class boundaries.
@@ -454,7 +480,7 @@ def chunk_code(
     if not content.strip():
         return []
 
-    domain = _extract_domain(source_file)
+    domain = _extract_domain(source_file, domain_aliases)
     ext = Path(source_file).suffix.lower()
     lines = content.split("\n")
 
@@ -523,12 +549,13 @@ def chunk_structured(
     source_file: str,
     max_tokens: int = 512,
     min_chunk_length: int = 50,
+    domain_aliases: Optional[dict] = None,
 ) -> list[Chunk]:
     """Chunk JSON, YAML, TOML, XML files by top-level keys/sections."""
     if not content.strip():
         return []
 
-    domain = _extract_domain(source_file)
+    domain = _extract_domain(source_file, domain_aliases)
     ext = Path(source_file).suffix.lower()
 
     if ext in (".json",):
@@ -681,6 +708,7 @@ def chunk_html(
     source_file: str,
     max_tokens: int = 512,
     min_chunk_length: int = 50,
+    domain_aliases: Optional[dict] = None,
 ) -> list[Chunk]:
     """Strip HTML to text, then chunk as markdown."""
     try:
@@ -721,7 +749,7 @@ def chunk_html(
         text = re.sub(r"<[^>]+>", " ", content)
         text = re.sub(r"\s+", " ", text).strip()
 
-    return chunk_markdown(text, source_file, max_tokens, 0, min_chunk_length)
+    return chunk_markdown(text, source_file, max_tokens, 0, min_chunk_length, domain_aliases=domain_aliases)
 
 
 # --- PDF chunking ---
@@ -731,6 +759,7 @@ def chunk_pdf(
     source_file: str,
     max_tokens: int = 512,
     min_chunk_length: int = 50,
+    domain_aliases: Optional[dict] = None,
 ) -> list[Chunk]:
     """Extract text from PDF and chunk it."""
     text = ""
@@ -757,14 +786,14 @@ def chunk_pdf(
                 start_line=0,
                 end_line=0,
                 content_type="prose",
-                domain=_extract_domain(source_file),
+                domain=_extract_domain(source_file, domain_aliases),
                 tags=["pdf", "unprocessed"],
             )]
 
     if not text.strip():
         return []
 
-    return chunk_markdown(text, source_file, max_tokens, 0, min_chunk_length, split_on_headers=False)
+    return chunk_markdown(text, source_file, max_tokens, 0, min_chunk_length, split_on_headers=False, domain_aliases=domain_aliases)
 
 
 # --- DOCX chunking ---
@@ -774,6 +803,7 @@ def chunk_docx(
     source_file: str,
     max_tokens: int = 512,
     min_chunk_length: int = 50,
+    domain_aliases: Optional[dict] = None,
 ) -> list[Chunk]:
     """Extract text from DOCX and chunk it."""
     try:
@@ -800,14 +830,14 @@ def chunk_docx(
             start_line=0,
             end_line=0,
             content_type="prose",
-            domain=_extract_domain(source_file),
+            domain=_extract_domain(source_file, domain_aliases),
             tags=["docx", "unprocessed"],
         )]
 
     if not text.strip():
         return []
 
-    return chunk_markdown(text, source_file, max_tokens, 0, min_chunk_length)
+    return chunk_markdown(text, source_file, max_tokens, 0, min_chunk_length, domain_aliases=domain_aliases)
 
 
 # --- Universal dispatcher ---
@@ -819,18 +849,20 @@ def chunk_file(
     overlap_tokens: int = 64,
     min_chunk_length: int = 50,
     split_on_headers: bool = True,
+    domain_aliases: Optional[dict] = None,
 ) -> list[Chunk]:
     """
     Universal entry point. Detects format and dispatches
-    to the appropriate chunker.
+    to the appropriate chunker. Applies domain alias normalization
+    so chunks always get canonical domain tags.
     """
     fmt = detect_format(source_file)
 
     if fmt == "pdf":
-        return chunk_pdf(file_path, source_file, max_tokens, min_chunk_length)
+        return chunk_pdf(file_path, source_file, max_tokens, min_chunk_length, domain_aliases)
 
     if fmt == "docx":
-        return chunk_docx(file_path, source_file, max_tokens, min_chunk_length)
+        return chunk_docx(file_path, source_file, max_tokens, min_chunk_length, domain_aliases)
 
     # For text-based formats, read content
     try:
@@ -839,16 +871,16 @@ def chunk_file(
         return []
 
     if fmt == "markdown":
-        return chunk_markdown(content, source_file, max_tokens, overlap_tokens, min_chunk_length, split_on_headers)
+        return chunk_markdown(content, source_file, max_tokens, overlap_tokens, min_chunk_length, split_on_headers, domain_aliases)
     elif fmt == "code":
-        return chunk_code(content, source_file, max_tokens, min_chunk_length)
+        return chunk_code(content, source_file, max_tokens, min_chunk_length, domain_aliases)
     elif fmt in ("structured", "tabular"):
-        return chunk_structured(content, source_file, max_tokens, min_chunk_length)
+        return chunk_structured(content, source_file, max_tokens, min_chunk_length, domain_aliases)
     elif fmt == "html":
-        return chunk_html(content, source_file, max_tokens, min_chunk_length)
+        return chunk_html(content, source_file, max_tokens, min_chunk_length, domain_aliases)
     else:
         # Plain text: use markdown chunker without header splitting
-        return chunk_markdown(content, source_file, max_tokens, overlap_tokens, min_chunk_length, split_on_headers=False)
+        return chunk_markdown(content, source_file, max_tokens, overlap_tokens, min_chunk_length, split_on_headers=False, domain_aliases=domain_aliases)
 
 
 # --- File collection ---
@@ -877,5 +909,65 @@ def collect_files(
                         break
                 if not skip and f.is_file():
                     files.append(f)
+
+    return sorted(set(files))
+
+
+def collect_external_files(
+    project_path: str,
+    include_patterns: list[str],
+    exclude_patterns: list[str],
+) -> list[Path]:
+    """Find all indexable files in an external project directory.
+
+    Like collect_files but takes an absolute path instead of relative dirs.
+    Used for multi-project indexing.
+
+    Exclude patterns match:
+    - Exact filenames (e.g. ".env")
+    - Glob on filename (e.g. "*.jpg")
+    - Directory names ANYWHERE in path (e.g. "node_modules/*" excludes
+      any file under any node_modules/ directory at any depth)
+    """
+    import fnmatch
+
+    root = Path(project_path)
+    if not root.exists():
+        return []
+
+    # Pre-compute directory names to exclude (strip trailing /*)
+    exclude_dirs = set()
+    exclude_file_patterns = []
+    for excl in exclude_patterns:
+        stripped = excl.rstrip("/*").rstrip("\\*")
+        if "/" in excl or "\\" in excl or excl.endswith("/*"):
+            exclude_dirs.add(stripped)
+        else:
+            exclude_file_patterns.append(excl)
+    # Common directories to always exclude
+    exclude_dirs.update({"node_modules", ".git", "__pycache__", ".next", "venv", ".venv", ".gstack"})
+
+    files = []
+    for pattern in include_patterns:
+        for f in root.rglob(pattern):
+            rel = f.relative_to(root)
+            rel_parts = rel.parts
+
+            # Check if ANY parent directory is in the exclude set
+            skip = False
+            for part in rel_parts[:-1]:  # check all dirs, not the filename
+                if part in exclude_dirs:
+                    skip = True
+                    break
+
+            if not skip:
+                # Check filename-level patterns
+                for excl in exclude_file_patterns:
+                    if fnmatch.fnmatch(rel.name, excl):
+                        skip = True
+                        break
+
+            if not skip and f.is_file():
+                files.append(f)
 
     return sorted(set(files))

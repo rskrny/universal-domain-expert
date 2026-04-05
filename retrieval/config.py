@@ -52,6 +52,9 @@ class RetrievalConfig:
     semantic_weight: float = 0.6
     rerank_top_n: int = 20  # candidates before fusion
 
+    # Domain normalization
+    domain_aliases: dict[str, str] = field(default_factory=dict)
+
     # SQLite
     db_path: Optional[Path] = None
 
@@ -60,6 +63,12 @@ class RetrievalConfig:
         self.store_dir = Path(self.store_dir)
         if self.db_path is None:
             self.db_path = self.store_dir / "metadata.db"
+
+    def resolve_domain(self, domain: str) -> str:
+        """Map a domain name to its canonical form. Returns input if no alias."""
+        if not domain:
+            return domain
+        return self.domain_aliases.get(domain, domain)
 
     @classmethod
     def from_yaml(cls, path: Path) -> "RetrievalConfig":

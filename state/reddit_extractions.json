@@ -1,0 +1,950 @@
+{
+  "1s2yg3y": {
+    "status": "extracted",
+    "domain": "ai-machine-learning",
+    "engagement": 0.878,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 03:27"
+  },
+  "ovd8lp": {
+    "status": "extracted",
+    "domain": "career-guidance",
+    "engagement": 1.0,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:01"
+  },
+  "nyx4p2": {
+    "status": "extracted",
+    "domain": "labor-law",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:01"
+  },
+  "nwxgb5": {
+    "status": "extracted",
+    "domain": "productivity",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:01"
+  },
+  "nf22we": {
+    "status": "extracted",
+    "domain": "dating-social-dynamics",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:02"
+  },
+  "ndyinh": {
+    "status": "extracted",
+    "domain": "software-dev",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:02"
+  },
+  "mtjylz": {
+    "status": "extracted",
+    "domain": "sports-medicine",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:02"
+  },
+  "lwv8ip": {
+    "status": "extracted",
+    "domain": "public-policy",
+    "engagement": 1.0,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:02"
+  },
+  "lh3mdr": {
+    "status": "extracted",
+    "domain": "education",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:02"
+  },
+  "lbznno": {
+    "status": "extracted",
+    "domain": "chemistry",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:02"
+  },
+  "kv3tie": {
+    "status": "extracted",
+    "domain": "event-planning",
+    "engagement": 1.0,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:02"
+  },
+  "jqizd2": {
+    "status": "extracted",
+    "domain": "psychology",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:02"
+  },
+  "jlyw30": {
+    "status": "extracted",
+    "domain": "interpersonal-communication",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:02"
+  },
+  "j81h3x": {
+    "status": "extracted",
+    "domain": "animal-behavior",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:02"
+  },
+  "j2mm1b": {
+    "status": "extracted",
+    "domain": "privacy-security",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "low",
+    "extracted_at": "2026-04-05 04:03"
+  },
+  "ib5jgn": {
+    "status": "extracted",
+    "domain": "consumer-behavior",
+    "engagement": 1.0,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:03"
+  },
+  "i1ha54": {
+    "status": "extracted",
+    "domain": "digital-privacy",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:03"
+  },
+  "gyynj5": {
+    "status": "extracted",
+    "domain": "energy-storage",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:03"
+  },
+  "g9kw5e": {
+    "status": "extracted",
+    "domain": "consumer-economics",
+    "engagement": 1.0,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:03"
+  },
+  "g2n5hf": {
+    "status": "extracted",
+    "domain": "history",
+    "engagement": 1.0,
+    "claims_count": 3,
+    "practical_value": "low",
+    "extracted_at": "2026-04-05 04:03"
+  },
+  "fxu66b": {
+    "status": "extracted",
+    "domain": "education",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:03"
+  },
+  "fplrl9": {
+    "status": "extracted",
+    "domain": "healthcare-medical",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:03"
+  },
+  "f5mjmz": {
+    "status": "extracted",
+    "domain": "data-visualization",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:04"
+  },
+  "ej2p6h": {
+    "status": "extracted",
+    "domain": "consumer-services",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:04"
+  },
+  "dwaa36": {
+    "status": "extracted",
+    "domain": "career-development",
+    "engagement": 1.0,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:04"
+  },
+  "du8l6b": {
+    "status": "extracted",
+    "domain": "education-pedagogy",
+    "engagement": 1.0,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:04"
+  },
+  "dtlgav": {
+    "status": "extracted",
+    "domain": "public-health",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:04"
+  },
+  "dsh6ou": {
+    "status": "extracted",
+    "domain": "e-commerce",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:04"
+  },
+  "drs6vc": {
+    "status": "extracted",
+    "domain": "personal-finance",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:04"
+  },
+  "d5vknk": {
+    "status": "extracted",
+    "domain": "systems-administration",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:04"
+  },
+  "d3efdl": {
+    "status": "extracted",
+    "domain": "cognitive-psychology",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:04"
+  },
+  "cvqxgc": {
+    "status": "extracted",
+    "domain": "climate-policy",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:05"
+  },
+  "c3e2np": {
+    "status": "extracted",
+    "domain": "immunotherapy",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:05"
+  },
+  "a24iyb": {
+    "status": "extracted",
+    "domain": "personal-finance",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:05"
+  },
+  "a0o6yc": {
+    "status": "extracted",
+    "domain": "biology-genetics",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:05"
+  },
+  "9x5o49": {
+    "status": "extracted",
+    "domain": "environmental-science",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:05"
+  },
+  "9uybgi": {
+    "status": "extracted",
+    "domain": "oncology",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:05"
+  },
+  "9u76rq": {
+    "status": "extracted",
+    "domain": "neuroscience-psychopharmacology",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:05"
+  },
+  "9th150": {
+    "status": "extracted",
+    "domain": "consumer-tips",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "low",
+    "extracted_at": "2026-04-05 04:05"
+  },
+  "9su0zw": {
+    "status": "extracted",
+    "domain": "mergers-acquisitions",
+    "engagement": 1.0,
+    "claims_count": 3,
+    "practical_value": "low",
+    "extracted_at": "2026-04-05 04:05"
+  },
+  "9lkt1z": {
+    "status": "extracted",
+    "domain": "neuroscience",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:06"
+  },
+  "97s800": {
+    "status": "extracted",
+    "domain": "internet-policy",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:06"
+  },
+  "8lt3e4": {
+    "status": "extracted",
+    "domain": "healthcare",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:06"
+  },
+  "7hp3np": {
+    "status": "extracted",
+    "domain": "education-learning",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:06"
+  },
+  "8fzsp6": {
+    "status": "extracted",
+    "domain": "personal-finance",
+    "engagement": 1.0,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:06"
+  },
+  "8f81kd": {
+    "status": "extracted",
+    "domain": "finance-crime",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:06"
+  },
+  "8evc28": {
+    "status": "extracted",
+    "domain": "personal-finance",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:06"
+  },
+  "8d0ymq": {
+    "status": "extracted",
+    "domain": "personal-finance",
+    "engagement": 1.0,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:06"
+  },
+  "88unax": {
+    "status": "error",
+    "error": "JSON parse error: Expecting ',' delimiter: line 28 column 23 (char 2398)"
+  },
+  "84nr0n": {
+    "status": "extracted",
+    "domain": "productivity-software",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:07"
+  },
+  "7yoaie": {
+    "status": "extracted",
+    "domain": "filmmaking",
+    "engagement": 1.0,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:07"
+  },
+  "7g8mxk": {
+    "status": "extracted",
+    "domain": "cryptocurrency-investing",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "low",
+    "extracted_at": "2026-04-05 04:07"
+  },
+  "6byy5a": {
+    "status": "extracted",
+    "domain": "consumer-tips",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:07"
+  },
+  "6992si": {
+    "status": "extracted",
+    "domain": "physics",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:07"
+  },
+  "5njr2k": {
+    "status": "extracted",
+    "domain": "data-analysis",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:07"
+  },
+  "59otdi": {
+    "status": "extracted",
+    "domain": "education",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:07"
+  },
+  "51yiz2": {
+    "status": "extracted",
+    "domain": "travel-planning",
+    "engagement": 1.0,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:07"
+  },
+  "4w5j2l": {
+    "status": "extracted",
+    "domain": "political-analysis",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:07"
+  },
+  "4qmxzg": {
+    "status": "extracted",
+    "domain": "career-development",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:08"
+  },
+  "4j6x0f": {
+    "status": "extracted",
+    "domain": "legal-services",
+    "engagement": 1.0,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:08"
+  },
+  "4cl5l3": {
+    "status": "extracted",
+    "domain": "grammar-language",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:08"
+  },
+  "42igwq": {
+    "status": "extracted",
+    "domain": "health-wellness",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:08"
+  },
+  "3aj4by": {
+    "status": "extracted",
+    "domain": "home-living",
+    "engagement": 1.0,
+    "claims_count": 2,
+    "practical_value": "low",
+    "extracted_at": "2026-04-05 04:08"
+  },
+  "7xkwkz": {
+    "status": "extracted",
+    "domain": "digital-tools",
+    "engagement": 0.993,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:08"
+  },
+  "951tfg": {
+    "status": "extracted",
+    "domain": "education-policy",
+    "engagement": 0.992,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:08"
+  },
+  "1q3tab3": {
+    "status": "extracted",
+    "domain": "software-dev",
+    "engagement": 0.988,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:08"
+  },
+  "cjhtp4": {
+    "status": "extracted",
+    "domain": "corporate-finance",
+    "engagement": 0.987,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:09"
+  },
+  "1loy2bg": {
+    "status": "extracted",
+    "domain": "sales-and-closing",
+    "engagement": 0.984,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:09"
+  },
+  "g5ig60": {
+    "status": "extracted",
+    "domain": "mental-health-psychiatry",
+    "engagement": 0.984,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:09"
+  },
+  "f1o73u": {
+    "status": "extracted",
+    "domain": "quantitative-finance",
+    "engagement": 0.968,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:09"
+  },
+  "9v0eg8": {
+    "status": "extracted",
+    "domain": "dating-relationships",
+    "engagement": 0.968,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:09"
+  },
+  "462cqb": {
+    "status": "extracted",
+    "domain": "self-improvement",
+    "engagement": 0.957,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:09"
+  },
+  "7eu6gt": {
+    "status": "extracted",
+    "domain": "dating-relationships",
+    "engagement": 0.951,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:09"
+  },
+  "e5e8pr": {
+    "status": "extracted",
+    "domain": "fitness-training",
+    "engagement": 0.945,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:10"
+  },
+  "a0ceqz": {
+    "status": "extracted",
+    "domain": "self-help",
+    "engagement": 0.941,
+    "claims_count": 1,
+    "practical_value": "low",
+    "extracted_at": "2026-04-05 04:10"
+  },
+  "9johhh": {
+    "status": "extracted",
+    "domain": "social-skills",
+    "engagement": 0.911,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:10"
+  },
+  "efu5ue": {
+    "status": "extracted",
+    "domain": "platform-moderation",
+    "engagement": 0.898,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:10"
+  },
+  "1rzkw4x": {
+    "status": "extracted",
+    "domain": "ai-machine-learning",
+    "engagement": 0.887,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:10"
+  },
+  "1qrd4ao": {
+    "status": "extracted",
+    "domain": "software-development",
+    "engagement": 0.882,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:10"
+  },
+  "1pn9m85": {
+    "status": "extracted",
+    "domain": "software-dev",
+    "engagement": 0.882,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:10"
+  },
+  "1rxgwjx": {
+    "status": "extracted",
+    "domain": "ai-machine-learning",
+    "engagement": 0.879,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:10"
+  },
+  "4bcapo": {
+    "status": "extracted",
+    "domain": "dating-relationships",
+    "engagement": 0.841,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:11"
+  },
+  "1q7nbzz": {
+    "status": "extracted",
+    "domain": "software-development",
+    "engagement": 0.828,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:11"
+  },
+  "1py5oax": {
+    "status": "extracted",
+    "domain": "software-dev",
+    "engagement": 0.827,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:11"
+  },
+  "1mlo4nd": {
+    "status": "extracted",
+    "domain": "content-creation",
+    "engagement": 0.825,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:11"
+  },
+  "1r3cid8": {
+    "status": "extracted",
+    "domain": "ai-machine-learning",
+    "engagement": 0.817,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:11"
+  },
+  "1mnclnv": {
+    "status": "extracted",
+    "domain": "ai-machine-learning",
+    "engagement": 0.817,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:11"
+  },
+  "7773px": {
+    "status": "extracted",
+    "domain": "dating-relationships",
+    "engagement": 0.817,
+    "claims_count": 2,
+    "practical_value": "low",
+    "extracted_at": "2026-04-05 04:12"
+  },
+  "1pwv7gq": {
+    "status": "extracted",
+    "domain": "ai-machine-learning",
+    "engagement": 0.815,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:12"
+  },
+  "1s4iy56": {
+    "status": "extracted",
+    "domain": "ai-machine-learning",
+    "engagement": 0.811,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:12"
+  },
+  "39bff9": {
+    "status": "extracted",
+    "domain": "self-help-personal-development",
+    "engagement": 0.797,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:12"
+  },
+  "nvs878": {
+    "status": "extracted",
+    "domain": "language-learning",
+    "engagement": 0.796,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:12"
+  },
+  "1riz3ew": {
+    "status": "extracted",
+    "domain": "ai-machine-learning",
+    "engagement": 0.783,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:12"
+  },
+  "5966b3": {
+    "status": "extracted",
+    "domain": "dating-seduction",
+    "engagement": 0.762,
+    "claims_count": 2,
+    "practical_value": "low",
+    "extracted_at": "2026-04-05 04:12"
+  },
+  "1gyun66": {
+    "status": "extracted",
+    "domain": "ai-machine-learning",
+    "engagement": 0.752,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:12"
+  },
+  "5kqu52": {
+    "status": "extracted",
+    "domain": "pharmacology",
+    "engagement": 0.744,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:13"
+  },
+  "1pdibz9": {
+    "status": "extracted",
+    "domain": "ai-machine-learning",
+    "engagement": 0.732,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:13"
+  },
+  "1s02h92": {
+    "status": "extracted",
+    "domain": "ai-machine-learning",
+    "engagement": 0.707,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:13"
+  },
+  "1n402cw": {
+    "status": "extracted",
+    "domain": "organizational-management",
+    "engagement": 0.706,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:13"
+  },
+  "1qdi6zv": {
+    "status": "extracted",
+    "domain": "software-dev",
+    "engagement": 0.702,
+    "claims_count": 3,
+    "practical_value": "low",
+    "extracted_at": "2026-04-05 04:13"
+  },
+  "1qh6bkh": {
+    "status": "extracted",
+    "domain": "ai-machine-learning",
+    "engagement": 0.691,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:13"
+  },
+  "e1qzpr": {
+    "status": "extracted",
+    "domain": "dating-apps",
+    "engagement": 0.686,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:13"
+  },
+  "1rask5l": {
+    "status": "extracted",
+    "domain": "ai-machine-learning",
+    "engagement": 0.654,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:13"
+  },
+  "5jkbjv": {
+    "status": "extracted",
+    "domain": "social-dynamics",
+    "engagement": 0.65,
+    "claims_count": 1,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:13"
+  },
+  "1qnq8mk": {
+    "status": "extracted",
+    "domain": "cybersecurity",
+    "engagement": 0.616,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:14"
+  },
+  "7drzfx": {
+    "status": "skipped",
+    "reason": "Too short, no comments"
+  },
+  "9bus8f": {
+    "status": "extracted",
+    "domain": "day-trading",
+    "engagement": 0.614,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:14"
+  },
+  "1q3ni6n": {
+    "status": "extracted",
+    "domain": "ai-machine-learning",
+    "engagement": 0.606,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:14"
+  },
+  "1prbqbi": {
+    "status": "extracted",
+    "domain": "software-dev",
+    "engagement": 0.598,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:24"
+  },
+  "1s2t2xn": {
+    "status": "extracted",
+    "domain": "ai-machine-learning",
+    "engagement": 0.596,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:24"
+  },
+  "1rhab55": {
+    "status": "extracted",
+    "domain": "ai-machine-learning",
+    "engagement": 0.557,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:24"
+  },
+  "3l2am8": {
+    "status": "skipped",
+    "reason": "Too short, no comments"
+  },
+  "5h7fdr": {
+    "status": "skipped",
+    "reason": "Too short, no comments"
+  },
+  "gvt2hz": {
+    "status": "extracted",
+    "domain": "community-building",
+    "engagement": 0.506,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:24"
+  },
+  "1qn4t1e": {
+    "status": "extracted",
+    "domain": "ai-machine-learning",
+    "engagement": 0.499,
+    "claims_count": 3,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:24"
+  },
+  "1qk856q": {
+    "status": "extracted",
+    "domain": "ai-machine-learning",
+    "engagement": 0.481,
+    "claims_count": 3,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:25"
+  },
+  "1qgmjl5": {
+    "status": "extracted",
+    "domain": "ai-machine-learning",
+    "engagement": 0.469,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:25"
+  },
+  "8eznfq": {
+    "status": "extracted",
+    "domain": "professional-development",
+    "engagement": 0.448,
+    "claims_count": 2,
+    "practical_value": "medium",
+    "extracted_at": "2026-04-05 04:25"
+  },
+  "gd5kkp": {
+    "status": "extracted",
+    "domain": "software-dev",
+    "engagement": 0.426,
+    "claims_count": 2,
+    "practical_value": "high",
+    "extracted_at": "2026-04-05 04:25"
+  },
+  "8e0oje": {
+    "status": "extracted",
+    "domain": "finance-trading",
+    "engagement": 0.343,
+    "claims_count": 2,
+    "practical_value": "low",
+    "extracted_at": "2026-04-05 04:25"
+  },
+  "7lm6q7": {
+    "status": "skipped",
+    "reason": "Too short, no comments"
+  }
+}

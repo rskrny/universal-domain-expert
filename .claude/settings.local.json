@@ -1,0 +1,58 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(PYTHONIOENCODING=utf-8 python:*)",
+      "Bash(curl:*)",
+      "Bash(node -e:*)",
+      "Bash(echo:*)",
+      "Bash(pip:*)",
+      "Bash(npx:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(mkdir:*)",
+      "Bash(taskkill:*)",
+      "Bash(kill:*)",
+      "Bash(pkill:*)",
+      "Bash(tasklist)",
+      "Bash(netstat:*)",
+      "Bash(powershell:*)",
+      "Bash(export:*)",
+      "WebFetch(domain:reddit.com)",
+      "WebFetch(domain:open.feishu.cn)",
+      "WebFetch(domain:open.larkoffice.com)",
+      "WebFetch(domain:fishingbloodline.com)",
+      "WebFetch(domain:gesedge.com)",
+      "mcp__Claude_Preview__preview_start",
+      "mcp__Windows-MCP__PowerShell",
+      "mcp__Windows-MCP__Clipboard",
+      "mcp__Windows-MCP__Registry",
+      "mcp__d5eaaf22-c437-41b3-a570-d7ec40572f60__d1_database_query",
+      "mcp__d5eaaf22-c437-41b3-a570-d7ec40572f60__workers_list",
+      "mcp__d5eaaf22-c437-41b3-a570-d7ec40572f60__workers_get_worker",
+      "mcp__d5eaaf22-c437-41b3-a570-d7ec40572f60__workers_get_worker_code",
+      "mcp__scheduled-tasks__list_scheduled_tasks",
+      "mcp__ad76b29f-f73a-4278-9d44-127f66da3da8__send_lark_message",
+      "mcp__mcp-registry__search_mcp_registry",
+      "mcp__minimax__text_to_image",
+      "mcp__d5eaaf22-c437-41b3-a570-d7ec40572f60__d1_databases_list",
+      "mcp__Windows-MCP__Screenshot",
+      "mcp__Windows-MCP__App"
+    ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/route_hook.py"
+          }
+        ]
+      }
+    ]
+  }
+}

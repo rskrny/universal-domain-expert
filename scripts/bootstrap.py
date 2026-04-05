@@ -1,0 +1,264 @@
+"""
+Session Bootstrap -- runs at the start of each Claude Code session.
+
+Collects contextual intelligence from all sources and writes a
+session briefing to state/SESSION_CONTEXT.md. Claude Code reads this
+file automatically via CLAUDE.md instructions.
+
+What it collects:
+  1. Handoff state (what was worked on last session)
+  2. Knowledge base health (chunks, domains, gaps)
+  3. Recent Reddit activity (new saves since last session)
+  4. Brain Feed pending items
+  5. Pending ingestion (what's ready to be processed)
+  6. System health (feedback count, neural router progress)
+
+Usage:
+    python scripts/bootstrap.py              # Full bootstrap
+    python scripts/bootstrap.py --quick      # Skip network calls (offline mode)
+"""
+
+import json
+import os
+import sys
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
+from dotenv import load_dotenv
+load_dotenv(ROOT / ".env")
+
+
+def get_handoff_summary() -> str:
+    """Read HANDOFF.md and extract the key resume points."""
+    handoff_path = ROOT / "state" / "HANDOFF.md"
+    if not handoff_path.exists():
+        return "No prior session state. Fresh start."
+
+    text = handoff_path.read_text(encoding="utf-8")
+    if len(text.strip()) < 100 or "empty template" in text.lower():
+        return "No prior session state. Fresh start."
+
+    # Extract the first 40 lines (header + key context)
+    lines = text.strip().split("\n")[:40]
+    return "\n".join(lines)
+
+
+def get_knowledge_health() -> dict:
+    """Get current index statistics."""
+    try:
+        from retrieval.config import RetrievalConfig
+        from retrieval.store import Store
+
+        config = RetrievalConfig(knowledge_root=ROOT)
+        config.store_dir = ROOT / "retrieval" / "store"
+        config.db_path = config.store_dir / "metadata.db"
+
+        store = Store(config.db_path, config.store_dir)
+        agg = store.get_aggregate_stats()
+        feedback_count = store.feedback_count()
+        routing_count = store.routing_log_count()
+
+        # Domain difficulty
+        diff_stats = store.get_domain_difficulty_stats()
+        hard_domains = [d for d in diff_stats if d["avg_difficulty"] > 0.6]
+
+        store.close()
+
+        return {
+            "chunks": agg["total_chunks"],
+            "tokens": agg["total_tokens"],
+            "domains": agg["domain_count"],
+            "files": agg["file_count"],
+            "feedback_count": feedback_count,
+            "routing_count": routing_count,
+            "neural_router_ready": routing_count >= 50,
+            "hard_domains": hard_domains,
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def get_reddit_status() -> dict:
+    """Check for new Reddit saves since last ingestion."""
+    reddit_path = Path("C:/Users/rskrn/Desktop/reddit api/saved_posts_raw.json")
+    tracking_file = ROOT / "state" / "reddit_ingested.json"
+
+    if not reddit_path.exists():
+        return {"available": False}
+
+    try:
+        posts = json.loads(reddit_path.read_text(encoding="utf-8"))
+        ingested = set()
+        if tracking_file.exists():
+            ingested = set(json.loads(tracking_file.read_text()))
+
+        cutoff = time.time() - 180 * 86400
+        recent = [p for p in posts if p.get("created_utc", 0) > cutoff]
+        pending = [p for p in recent if p["id"] not in ingested]
+
+        # Summarize pending by subreddit
+        by_sub = {}
+        for p in pending[:20]:
+            sub = p.get("subreddit", "?")
+            by_sub[sub] = by_sub.get(sub, 0) + 1
+
+        return {
+            "available": True,
+            "total": len(posts),
+            "recent_6mo": len(recent),
+            "pending": len(pending),
+            "pending_by_subreddit": by_sub,
+            "top_pending": [
+                {"title": p["title"][:100], "subreddit": p["subreddit"], "score": p["score"]}
+                for p in sorted(pending, key=lambda x: x["score"], reverse=True)[:5]
+            ],
+        }
+    except Exception as e:
+        return {"available": False, "error": str(e)}
+
+
+def get_brainfeed_status(quick: bool = False) -> dict:
+    """Check Brain Feed for pending items."""
+    if quick:
+        return {"skipped": True, "reason": "quick mode (no network)"}
+
+    brainfeed_url = os.getenv("BRAINFEED_URL", "https://brainfeed.hanahaulers.com")
+    try:
+        from urllib.request import Request, urlopen
+        req = Request(f"{brainfeed_url}/api/stats", method="GET")
+        with urlopen(req, timeout=10) as resp:
+            return json.loads(resp.read().decode())
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def build_session_context(quick: bool = False) -> str:
+    """Build the full session context document."""
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+    sections = []
+    sections.append(f"# Session Context -- {now}")
+    sections.append("")
+    sections.append("> Auto-generated by bootstrap.py. Read this for session awareness.")
+    sections.append("")
+
+    # 1. Handoff
+    sections.append("## Prior Session")
+    sections.append("")
+    handoff = get_handoff_summary()
+    sections.append(handoff)
+    sections.append("")
+
+    # 2. Knowledge health
+    sections.append("## Knowledge Base Health")
+    sections.append("")
+    health = get_knowledge_health()
+    if "error" in health:
+        sections.append(f"Error reading index: {health['error']}")
+    else:
+        sections.append(f"- **{health['chunks']:,}** chunks across **{health['domains']}** domains")
+        sections.append(f"- **{health['tokens']:,}** total tokens indexed across **{health['files']}** files")
+        sections.append(f"- **{health['feedback_count']}** feedback entries recorded")
+        sections.append(f"- **{health['routing_count']}/50** routing log entries (neural router {'READY' if health['neural_router_ready'] else 'collecting data'})")
+
+        if health.get("hard_domains"):
+            sections.append("")
+            sections.append("**Domains struggling (high difficulty):**")
+            for d in health["hard_domains"]:
+                sections.append(f"  - {d['domain']}: {d['avg_difficulty']:.2f} avg difficulty ({d['query_count']} queries)")
+    sections.append("")
+
+    # 3. Reddit
+    sections.append("## Reddit Intelligence")
+    sections.append("")
+    reddit = get_reddit_status()
+    if not reddit.get("available"):
+        sections.append("Reddit data not available. Run collector to fetch saved posts.")
+    else:
+        sections.append(f"- {reddit['total']} total saves, {reddit['recent_6mo']} in last 6 months")
+        if reddit["pending"] > 0:
+            sections.append(f"- **{reddit['pending']} posts pending ingestion** (run `python scripts/ingest.py reddit`)")
+            if reddit.get("top_pending"):
+                sections.append("")
+                sections.append("Top pending posts:")
+                for p in reddit["top_pending"]:
+                    sections.append(f"  - [{p['score']} pts] r/{p['subreddit']}: {p['title']}")
+        else:
+            sections.append("- All recent saves ingested. Knowledge base is current.")
+    sections.append("")
+
+    # 4. Brain Feed
+    sections.append("## Brain Feed Status")
+    sections.append("")
+    bf = get_brainfeed_status(quick=quick)
+    if bf.get("skipped"):
+        sections.append("Skipped (quick mode).")
+    elif bf.get("error"):
+        sections.append(f"Unreachable: {bf['error']}")
+    else:
+        total = bf.get("total_chunks", 0)
+        pending = bf.get("pending_sync", 0)
+        sections.append(f"- {total} total chunks in D1")
+        if pending > 0:
+            sections.append(f"- **{pending} chunks pending sync** (run `python scripts/ingest.py brainfeed`)")
+        else:
+            sections.append("- All chunks synced.")
+    sections.append("")
+
+    # 5. Action items
+    sections.append("## Suggested Actions")
+    sections.append("")
+    actions = []
+    if reddit.get("pending", 0) > 0:
+        actions.append(f"Run `python scripts/ingest.py reddit` to process {reddit['pending']} Reddit saves")
+    if isinstance(bf, dict) and bf.get("pending_sync", 0) > 0:
+        actions.append(f"Run `python scripts/ingest.py brainfeed` to sync Brain Feed chunks")
+    if health.get("hard_domains"):
+        for d in health["hard_domains"][:3]:
+            actions.append(f"Domain '{d['domain']}' needs more context (difficulty: {d['avg_difficulty']:.2f})")
+    if health.get("routing_count", 0) < 50:
+        remaining = 50 - health.get("routing_count", 0)
+        actions.append(f"Neural router needs {remaining} more routing entries to activate")
+
+    if actions:
+        for a in actions:
+            sections.append(f"- {a}")
+    else:
+        sections.append("- System is healthy. No urgent actions.")
+    sections.append("")
+
+    return "\n".join(sections)
+
+
+def main():
+    quick = "--quick" in sys.argv
+
+    print("Running session bootstrap...")
+    context = build_session_context(quick=quick)
+
+    # Write to state file
+    output_path = ROOT / "state" / "SESSION_CONTEXT.md"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(context, encoding="utf-8")
+
+    print(f"Session context written to: {output_path}")
+    print(f"  ({len(context)} chars, {len(context.split(chr(10)))} lines)")
+
+    # Also print a brief summary to stdout
+    health = get_knowledge_health()
+    if "error" not in health:
+        print(f"\n  Index: {health['chunks']:,} chunks | {health['domains']} domains | {health['feedback_count']} feedback")
+        if health.get("routing_count", 0) < 50:
+            print(f"  Neural router: {health['routing_count']}/50 entries")
+
+    reddit = get_reddit_status()
+    if reddit.get("pending", 0) > 0:
+        print(f"  Reddit: {reddit['pending']} posts pending ingestion")
+
+
+if __name__ == "__main__":
+    main()

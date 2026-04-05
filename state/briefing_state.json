@@ -1,0 +1,17 @@
+{
+  "last_run": "2026-04-05T22:04:12.229313+00:00",
+  "deadlines_surfaced": [],
+  "reddit_ids_surfaced": [
+    "https://reddit.com/r/ClaudeAI/comments/1sdad79/my_actual_aws_bill_running_claude_in_production/",
+    "https://reddit.com/r/AI_Agents/comments/1scvh5t/code_intelligence_for_248_languages_made_with/",
+    "https://reddit.com/r/AI_Agents/comments/1scx7td/solving_the_uitoapi_gap_a_universal_mcp_gateway/",
+    "https://reddit.com/r/AIAgentsInAction/comments/1sd7u6n/openais_gpt54_got_blocked_by_safety_mechanisms_5/"
+  ],
+  "reddit_count": 4,
+  "deadline_count": 0,
+  "system_stats": {
+    "chunks": 11487,
+    "queries": 147,
+    "routed": 52
+  }
+}

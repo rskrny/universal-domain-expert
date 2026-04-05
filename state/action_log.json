@@ -1,0 +1,122 @@
+[
+  {
+    "key": "2026-04-05|flipside status|overdue: - editor, leaving in ~3 months ",
+    "generated": "2026-04-05",
+    "last_seen": "2026-04-05",
+    "project": "Flipside Status",
+    "action": "OVERDUE: - Editor, leaving in ~3 months (July 2026) - **New editor** - Joining April 7 ## Team Changes () - Editor Luo could NOT ",
+    "category": "deadline",
+    "priority": 95,
+    "status": "pending",
+    "seen_count": 2,
+    "acted_date": null
+  },
+  {
+    "key": "2026-04-05|tax 2025|overdue: 2026-03-30). all 12 forms fille",
+    "generated": "2026-04-05",
+    "last_seen": "2026-04-05",
+    "project": "Tax 2025",
+    "action": "OVERDUE: 2026-03-30). All 12 forms filled and verified (134 automated checks passed). **PAYMENTS MADE ():** - $3,725.00 (2025 bal",
+    "category": "deadline",
+    "priority": 95,
+    "status": "pending",
+    "seen_count": 2,
+    "acted_date": null
+  },
+  {
+    "key": "2026-04-05|goldie negotiation|follow up: on pattern complexity",
+    "generated": "2026-04-05",
+    "last_seen": "2026-04-05",
+    "project": "Goldie Negotiation",
+    "action": "Follow up: on pattern complexity",
+    "category": "revenue",
+    "priority": 70,
+    "status": "pending",
+    "seen_count": 2,
+    "acted_date": null
+  },
+  {
+    "key": "2026-04-05|sullivan status|follow up: her reply",
+    "generated": "2026-04-05",
+    "last_seen": "2026-04-05",
+    "project": "Sullivan Status",
+    "action": "Follow up: her reply",
+    "category": "revenue",
+    "priority": 70,
+    "status": "pending",
+    "seen_count": 2,
+    "acted_date": null
+  },
+  {
+    "key": "2026-04-05|domain expert system|set up github remote. all commits are lo",
+    "generated": "2026-04-05",
+    "last_seen": "2026-04-05",
+    "project": "Domain Expert System",
+    "action": "Set up GitHub remote. All commits are local only.",
+    "category": "maintenance",
+    "priority": 60,
+    "status": "pending",
+    "seen_count": 1,
+    "acted_date": null
+  },
+  {
+    "key": "2026-04-05|bloodline status|check status: (5 moderate vulns)",
+    "generated": "2026-04-05",
+    "last_seen": "2026-04-05",
+    "project": "Bloodline Status",
+    "action": "Check status: (5 moderate vulns)",
+    "category": "blocked",
+    "priority": 45,
+    "status": "pending",
+    "seen_count": 2,
+    "acted_date": null
+  },
+  {
+    "key": "2026-04-05|goldie negotiation|check status: on pattern complexity",
+    "generated": "2026-04-05",
+    "last_seen": "2026-04-05",
+    "project": "Goldie Negotiation",
+    "action": "Check status: on pattern complexity",
+    "category": "blocked",
+    "priority": 45,
+    "status": "pending",
+    "seen_count": 2,
+    "acted_date": null
+  },
+  {
+    "key": "2026-04-05|sullivan status|check status: her reply",
+    "generated": "2026-04-05",
+    "last_seen": "2026-04-05",
+    "project": "Sullivan Status",
+    "action": "Check status: her reply",
+    "category": "blocked",
+    "priority": 45,
+    "status": "pending",
+    "seen_count": 2,
+    "acted_date": null
+  },
+  {
+    "key": "2026-04-05|domain expert system|unblock: state, staleness, opportunity c",
+    "generated": "2026-04-05",
+    "last_seen": "2026-04-05",
+    "project": "Domain Expert System",
+    "action": "Unblock: state, staleness, opportunity cost. Produces ranked daily action plan.",
+    "category": "blocked",
+    "priority": 55,
+    "status": "pending",
+    "seen_count": 1,
+    "acted_date": null
+  },
+  {
+    "key": "2026-04-05|smr compute|bookmark: my actual aws bill running cla",
+    "generated": "2026-04-05",
+    "last_seen": "2026-04-05",
+    "project": "SMR Compute",
+    "action": "Bookmark: My actual AWS bill running Claude in production for 5 months",
+    "category": "opportunity",
+    "priority": 20,
+    "status": "pending",
+    "seen_count": 1,
+    "acted_date": null
+  }
+]

@@ -1,0 +1,16 @@
+name = "brainfeed-webhook"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+# Custom domain for access from China (workers.dev blocked)
+[[routes]]
+pattern = "brainfeed.hanahaulers.com"
+custom_domain = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "brainfeed-knowledge"
+database_id = "f4711fcc-1d88-43a5-9e64-393207dcb964"
+
+[vars]
+WORKER_VERSION = "1.1.0"
