@@ -335,9 +335,48 @@ def main():
         print(f"ROUTING WARNING: Could not parse domain registry at {router_path}")
         sys.exit(0)
 
-    # Classify domain
+    # Classify domain: hybrid neural + keyword scoring
     domain_scores = classify_domain(query, registry)
     tier = classify_tier(query)
+
+    # Neural router: try semantic classification
+    neural_result = None
+    try:
+        sys.path.insert(0, str(project_root / "scripts"))
+        from neural_router import classify as neural_classify
+        neural_results = neural_classify(query, top_k=3)
+        if neural_results:
+            neural_result = neural_results[0]
+    except Exception:
+        pass  # Neural router not trained or failed, proceed with keywords
+
+    # Hybrid blend: if neural router has a confident result, boost that domain
+    if neural_result and neural_result.get("confidence", 0) >= 1.3:
+        neural_domain_file = neural_result["file"]
+        neural_score = neural_result["score"]
+        neural_domain_name = neural_result["domain_name"]
+
+        # Find if keyword scorer also matched this domain
+        keyword_has_it = False
+        for i, (dname, dfile, dscore, dkws) in enumerate(domain_scores):
+            if dfile == neural_domain_file:
+                # Boost keyword score with neural signal
+                boosted = dscore + neural_score * 5.0
+                domain_scores[i] = (dname, dfile, boosted, dkws + [f"[neural:{neural_score:.2f}]"])
+                keyword_has_it = True
+                break
+
+        # If keywords missed it entirely, inject it
+        if not keyword_has_it:
+            domain_scores.append((
+                neural_domain_name,
+                neural_domain_file,
+                neural_score * 5.0,
+                [f"[neural:{neural_score:.2f}]"],
+            ))
+
+        # Re-sort by score
+        domain_scores.sort(key=lambda x: x[2], reverse=True)
 
     # Build routing decision
     if domain_scores:

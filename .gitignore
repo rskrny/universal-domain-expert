@@ -9,6 +9,9 @@ __pycache__/
 retrieval/store/
 retrieval/knowledge-graph.html
 
+# Neural router artifacts (rebuild with `python scripts/neural_router.py train`)
+state/neural_router/*.npy
+
 # Binaries
 *.exe
 
