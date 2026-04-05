@@ -127,3 +127,5 @@
 {"timestamp": "2026-04-05T19:46:36.876554+00:00", "routed": false, "prompt_preview": "/route \n1. Information I am looking for is stuff that could help me with my businesses and overall l", "elapsed_ms": 4}
 {"timestamp": "2026-04-05T20:23:02.686729+00:00", "routed": false, "prompt_preview": "/route okay lets update project documentation to handoff to next session", "elapsed_ms": 8}
 {"timestamp": "2026-04-05T20:25:57.558299+00:00", "routed": false, "prompt_preview": "/route proceed as best you see fit", "elapsed_ms": 5}
+{"timestamp": "2026-04-05T20:47:01.551245+00:00", "routed": false, "prompt_preview": "/route okay so is this fully ready for me to use reliably and work on any existing projects or also ", "elapsed_ms": 7}
+{"timestamp": "2026-04-05T20:48:47.034774+00:00", "routed": false, "prompt_preview": "Please commit all of my changes so we can make a PR.", "elapsed_ms": 5}
