@@ -31,6 +31,8 @@ from dotenv import load_dotenv
 load_dotenv(ROOT / ".env")
 
 from scripts.intelligence import deadline_scanner, reddit_matcher, lark_cards, state_tracker
+from scripts.orchestrator import planner as orchestrator_planner
+from scripts.orchestrator import action_tracker
 
 # Constants
 STATE_DIR = ROOT / "state"
@@ -71,7 +73,7 @@ def _get_system_stats():
     return stats
 
 
-def _save_local_briefing(deadlines, matches, stats):
+def _save_local_briefing(deadlines, matches, stats, plan_data=None):
     """Save a clean markdown copy of the briefing locally."""
     now = _now_hst()
 
@@ -80,6 +82,13 @@ def _save_local_briefing(deadlines, matches, stats):
         f"> Generated {now.strftime('%I:%M %p HST')}",
         "",
     ]
+
+    # Orchestrator action plan (top of briefing)
+    if plan_data:
+        plan_md = orchestrator_planner.format_plan(plan_data)
+        if plan_md:
+            lines.append(plan_md)
+            lines.append("")
 
     # Deadlines
     if deadlines:
@@ -174,8 +183,8 @@ def run(skip_reddit=False, skip_lark=False):
     print("  [3/5] Checking system health...")
     stats = _get_system_stats()
 
-    # 4. Compute deltas and build
-    print("  [4/5] Computing deltas...")
+    # 4. Compute deltas
+    print("  [4/6] Computing deltas...")
     deltas = state_tracker.compute_deltas(deadlines, matches, stats)
     if deltas.get("is_first_run"):
         print("        First run, no previous state to compare")
@@ -185,16 +194,32 @@ def run(skip_reddit=False, skip_lark=False):
         new_d = len(deltas.get("new_deadlines", []))
         print(f"        {new_r} new posts, {ret_r} returning, {new_d} new deadlines")
 
-    print("  [5/5] Building briefing...")
+    # 5. Run orchestrator (the Jarvis brain)
+    print("  [5/6] Running orchestrator...")
+    plan_data = orchestrator_planner.plan(reddit_matches=matches, system_stats=stats)
+    action_count = len(plan_data.get("actions", []))
+    print(f"        {action_count} action(s) planned")
 
-    # Build card with delta awareness
-    card = lark_cards.build_morning_intel(deadlines, matches, stats, deltas=deltas)
+    # Track recommendations for feedback loop
+    if plan_data.get("actions"):
+        new_recs = action_tracker.record_plan(plan_data["actions"])
+        if new_recs:
+            print(f"        {new_recs} new recommendation(s) logged")
+        # Stale old recommendations
+        staled = action_tracker.mark_stale()
+        if staled:
+            print(f"        {staled} old recommendation(s) marked stale")
+
+    print("  [6/6] Building briefing...")
+
+    # Build card with delta awareness AND orchestrator plan
+    card = lark_cards.build_morning_intel(deadlines, matches, stats, deltas=deltas, plan_data=plan_data)
 
     # Save state AFTER building (so next run compares against this one)
     state_tracker.save(deadlines, matches, stats)
 
     # Save local markdown
-    briefing_text = _save_local_briefing(deadlines, matches, stats)
+    briefing_text = _save_local_briefing(deadlines, matches, stats, plan_data=plan_data)
     print(f"\nSaved to {BRIEFING_PATH}")
 
     # Deliver to Lark

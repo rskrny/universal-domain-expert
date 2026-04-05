@@ -2,7 +2,7 @@
 
 > Source of truth for the system's structure.
 > Read this before modifying any module. Update it when you add or change components.
-> Last verified: April 6, 2026.
+> Last verified: April 6, 2026 (Session 018: orchestrator layer added).
 
 ---
 
@@ -12,7 +12,7 @@ This is a knowledge operating system that turns Claude Code into a domain expert
 across 78 professional disciplines. It combines prompt engineering, hybrid retrieval,
 self-evaluating feedback, and external integrations into a single portable system.
 
-Four capabilities, one sentence each:
+Five capabilities, one sentence each:
 
 1. **Expert routing.** Classify any request by domain and complexity, load only
    the expertise needed, execute through a structured pipeline.
@@ -23,6 +23,9 @@ Four capabilities, one sentence each:
    chunks and demote poor ones. No manual interaction needed.
 4. **Continuous learning.** Ingest knowledge from Reddit, Lark DMs, and manual
    input. Track difficulty by domain. Enrich chunks with contextual prefixes.
+5. **Proactive planning.** Orchestrator scans all projects, reasons across deadlines,
+   revenue signals, blockers, and intelligence feeds to produce prioritized daily
+   action plans with tracked follow-through. (Session 018, Jarvis Layer 2)
 
 ---
 
@@ -78,6 +81,11 @@ ROOT/
     extract_claims.py     Claude API claim extraction from Reddit posts (evidence, confidence, novelty)
     enrich_domains.py     Domain enrichment pipeline (compare claims to domains, propose additions)
     improve.py            Self-improvement pipeline (domain gaps, skill opportunities, action items)
+    orchestrator/         JARVIS COGNITION LAYER (Session 018)
+      __init__.py         Module overview
+      project_scanner.py  Deep project state reader (status, blockers, waiting, deadlines, revenue)
+      planner.py          Daily action planner (priority scoring across all inputs)
+      action_tracker.py   Recommendation tracking + feedback loop (act rate by category)
     subreddit_config.py   Subreddit allowlist/denylist/scan targets (117 allowed, 60 denied, 38 scan)
     sync_brainfeed.py     D1 to local index sync
     send_to_lark.py       Push files/messages to Lark API
@@ -124,6 +132,7 @@ ROOT/
     reddit_extractions.json       Tracks which posts have been claim-extracted
     enrichment_proposals.json     Saved enrichment proposals from domain enrichment
     domain_enrichments.json       Tracks which domains have been enriched
+    action_log.json               Orchestrator recommendation tracking (act rate feedback)
 
   .claude/                CLAUDE CODE CONFIG
     launch.json           5 dev server configs (dashboard, finmodel, hana, ruleset, knowledge)
@@ -225,6 +234,10 @@ Search query
 | `scripts/improve.py` | pipeline output (extractions, enrichments, proposals) |
 | `scripts/subreddit_config.py` | (standalone config, imported by collect_reddit) |
 | `scripts/bootstrap.py` | retrieval.config, retrieval.store |
+| `scripts/orchestrator/planner.py` | orchestrator.project_scanner, routing_log |
+| `scripts/orchestrator/project_scanner.py` | memory files (project_*.md) |
+| `scripts/orchestrator/action_tracker.py` | state/action_log.json |
+| `scripts/intelligence/briefing.py` | deadline_scanner, reddit_matcher, lark_cards, state_tracker, orchestrator.planner, orchestrator.action_tracker |
 
 ### Shared State (SQLite)
 

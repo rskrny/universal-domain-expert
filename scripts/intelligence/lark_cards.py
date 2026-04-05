@@ -95,7 +95,34 @@ def _format_system_pulse(stats):
     return "**System** | " + " | ".join(parts)
 
 
-def build_morning_intel(deadlines, reddit_matches, system_stats=None, deltas=None):
+def _format_action_plan(plan_data):
+    """Format orchestrator action plan as lark_md text."""
+    if not plan_data:
+        return None
+
+    actions = plan_data.get("actions", [])
+    if not actions:
+        return None
+
+    lines = ["**Today's Focus**"]
+    for a in actions[:3]:
+        tag = "URGENT" if a["priority"] >= 80 else "HIGH" if a["priority"] >= 60 else ""
+        prefix = f"[{tag}] " if tag else ""
+        lines.append(f">> {prefix}{a['project']}: {a['action'][:70]}")
+        lines.append(f"   {a['why_now'][:80]}")
+
+    # Compact "also on radar" for items 4-7
+    remaining = actions[3:7]
+    if remaining:
+        lines.append("")
+        lines.append("**Also on Radar**")
+        for a in remaining:
+            lines.append(f"- {a['project']}: {a['action'][:60]}")
+
+    return "\n".join(lines)
+
+
+def build_morning_intel(deadlines, reddit_matches, system_stats=None, deltas=None, plan_data=None):
     """
     Build the morning intelligence card.
 
@@ -105,6 +132,8 @@ def build_morning_intel(deadlines, reddit_matches, system_stats=None, deltas=Non
         system_stats: System health metrics
         deltas: Output from state_tracker.compute_deltas(). If provided,
                 new items are highlighted and returning items are condensed.
+        plan_data: Output from orchestrator.planner.plan(). If provided,
+                   today's prioritized action plan is shown first.
 
     Returns a Lark interactive card dict ready for send_message().
     """
@@ -113,8 +142,22 @@ def build_morning_intel(deadlines, reddit_matches, system_stats=None, deltas=Non
 
     color = _header_color(deadlines)
 
+    # Upgrade color if orchestrator found urgent items
+    if plan_data and plan_data.get("actions"):
+        top_priority = plan_data["actions"][0].get("priority", 0)
+        if top_priority >= 80 and color != "red":
+            color = "orange"
+
     # Build card elements
     elements = []
+
+    # NEW: Orchestrator action plan (top of card, most important)
+    plan_text = _format_action_plan(plan_data)
+    if plan_text:
+        elements.append({
+            "tag": "div",
+            "text": {"tag": "lark_md", "content": plan_text},
+        })
 
     # Delta summary line (if we have prior state to compare)
     if deltas and not deltas.get("is_first_run"):
