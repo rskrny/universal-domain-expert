@@ -1172,7 +1172,8 @@ def generate_visualization(
     full_texts = {}
     for c in chunks:
         previews[c["id"]] = c["text"][:300]
-        full_texts[c["id"]] = c["text"]
+        text = c["text"]
+        full_texts[c["id"]] = text[:1000] + ("..." if len(text) > 1000 else "")
 
     graph_data["previews"] = previews
     graph_data["full_texts"] = full_texts
