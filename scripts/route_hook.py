@@ -145,12 +145,13 @@ def classify_domain(prompt: str, registry: dict) -> list:
                     matched.append(kw)
                     score += 3.0
             else:
-                # Single word: check exact word match
+                # Single word: check exact word match first
                 if kw_lower in prompt_words:
                     matched.append(kw)
                     score += 1.0
-                # Also check substring for compound words (e.g., "SaaS" in "saas-building")
-                elif kw_lower in prompt_lower:
+                # Substring match only for keywords 4+ chars (avoids "fea" in "features",
+                # "seo" in "people", etc.) and only for compound-ish words
+                elif len(kw_lower) >= 4 and kw_lower in prompt_lower:
                     matched.append(kw)
                     score += 0.5
 
