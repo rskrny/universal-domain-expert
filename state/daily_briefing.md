@@ -2,16 +2,13 @@
 
 ---
 
-> Generated 08:59 AM HST
+> Generated 09:08 AM HST
 
 
 ---
 
 ## Deadline Alerts
-- !! **2026-04-05** (0d) -- All Projects Map: ## Active Projects (11 total, updated ) **Folder structure:** GES Chengdu Huanqi
-- !! **2026-04-05** (0d) -- Bloodline Status: **Build status:** Passing (tsc + lint + build clean). 122 commits on main. **Las
-- !! **2026-04-05** (0d) -- Flipside Status: Chris** about consolidating or selling off redundant TikTok accounts. ## Account
-- !! **2026-04-05** (0d) -- Sullivan Status: ## Sullivan Auctioneers Engagement (Updated ) **Contact:** Marianne Sullivan, Pr
+No deadlines within 30 days.
 
 ---
 
@@ -44,13 +41,10 @@ No recent Lark messages.
 
 ## System Health
 Knowledge index: 11,487 chunks
-Routing log: 123 queries (44 routed)
+Routing log: 124 queries (44 routed)
 Reddit ingested: 25 posts
 
 ---
 
 ## Recommended Actions
-  1. TODAY: All Projects Map -- ## Active Projects (11 total, updated ) **Folder structure:** GES Chengdu Huanqi
-  2. TODAY: Bloodline Status -- **Build status:** Passing (tsc + lint + build clean). 122 commits on main. **Las
-  3. TODAY: Flipside Status -- Chris** about consolidating or selling off redundant TikTok accounts. ## Account
-  4. STANDING: Tax return needs printing, signing, and mailing by June 15
+  1. STANDING: Tax return needs printing, signing, and mailing by June 15

@@ -106,15 +106,24 @@ def extract_deadlines() -> list:
                     # Expand start to nearest word boundary
                     while start > 0 and text[start] not in (" ", "\n", "\t"):
                         start += 1
-                    context_raw = text[start:end].strip()
-                    # Remove the date itself since it displays separately
-                    context_raw = context_raw.replace(date_str, "").strip()
-                    context = " ".join(context_raw.split())[:150]
+                    window = text[start:end].strip()
 
-                    # Skip metadata dates (updated, generated, etc.)
-                    skip_patterns = ["updated 20", "generated 20", "as of 20", "Updated 20"]
-                    if any(sp in context_raw[max(0, idx - 20):idx + len(date_str)] for sp in skip_patterns):
+                    # Skip metadata dates using correct local offset
+                    local_idx = idx - start
+                    pre_context = window[max(0, local_idx - 40):local_idx].lower()
+                    skip_words = ["updated", "generated", "as of", "last ", "since ", "completed", "done ", "paid "]
+                    if any(sw in pre_context for sw in skip_words):
                         continue
+
+                    # Only keep dates near actual deadline language
+                    nearby_text = window.lower()
+                    deadline_signals = ["must", "due", "deadline", "by ", "expires", "file by", "mail by", "before", "cutoff"]
+                    if not any(sig in nearby_text for sig in deadline_signals):
+                        continue
+
+                    # Clean up for display
+                    context_raw = window.replace(date_str, "").strip()
+                    context = " ".join(context_raw.split())[:150]
 
                     deadlines.append({
                         "date": date_str,
