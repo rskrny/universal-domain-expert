@@ -8,7 +8,7 @@
     "category": "deadline",
     "priority": 95,
     "status": "pending",
-    "seen_count": 1,
+    "seen_count": 2,
     "acted_date": null
   },
   {
@@ -20,7 +20,7 @@
     "category": "deadline",
     "priority": 95,
     "status": "pending",
-    "seen_count": 1,
+    "seen_count": 2,
     "acted_date": null
   },
   {
@@ -32,7 +32,7 @@
     "category": "revenue",
     "priority": 70,
     "status": "pending",
-    "seen_count": 1,
+    "seen_count": 2,
     "acted_date": null
   },
   {
@@ -44,7 +44,7 @@
     "category": "revenue",
     "priority": 70,
     "status": "pending",
-    "seen_count": 1,
+    "seen_count": 2,
     "acted_date": null
   },
   {
@@ -68,7 +68,7 @@
     "category": "blocked",
     "priority": 45,
     "status": "pending",
-    "seen_count": 1,
+    "seen_count": 2,
     "acted_date": null
   },
   {
@@ -80,7 +80,7 @@
     "category": "blocked",
     "priority": 45,
     "status": "pending",
-    "seen_count": 1,
+    "seen_count": 2,
     "acted_date": null
   },
   {
@@ -91,6 +91,30 @@
     "action": "Check status: her reply",
     "category": "blocked",
     "priority": 45,
+    "status": "pending",
+    "seen_count": 2,
+    "acted_date": null
+  },
+  {
+    "key": "2026-04-05|domain expert system|unblock: state, staleness, opportunity c",
+    "generated": "2026-04-05",
+    "last_seen": "2026-04-05",
+    "project": "Domain Expert System",
+    "action": "Unblock: state, staleness, opportunity cost. Produces ranked daily action plan.",
+    "category": "blocked",
+    "priority": 55,
+    "status": "pending",
+    "seen_count": 1,
+    "acted_date": null
+  },
+  {
+    "key": "2026-04-05|smr compute|bookmark: my actual aws bill running cla",
+    "generated": "2026-04-05",
+    "last_seen": "2026-04-05",
+    "project": "SMR Compute",
+    "action": "Bookmark: My actual AWS bill running Claude in production for 5 months",
+    "category": "opportunity",
+    "priority": 20,
     "status": "pending",
     "seen_count": 1,
     "acted_date": null

@@ -67,9 +67,11 @@ STATUS_PATTERNS = [
     ]),
 ]
 
-# Blocker patterns
+# Blocker patterns -- require list-item or sentence-start context
+# to avoid matching descriptive text like "blocked state" in documentation
 BLOCKER_PATTERNS = [
-    r"(?:blocked|blocking|blocker)[:\s]+(.{10,80})",
+    r"(?:^|\n)\s*[-*]\s*(?:blocked|blocking|blocker)[:\s]+(.{10,80})",
+    r"(?:^|\n)\s*(?:blocked|blocking|blocker)\s+(?:by|on|because)\s+(.{10,80})",
     r"(?:need[s]? to|must)\s+(.{10,60})\s+(?:before|first)",
     r"(?:can't|cannot)\s+(.{10,60})\s+(?:until|without)",
 ]
@@ -192,11 +194,13 @@ def _extract_deadlines(text):
     done_signals = [
         "complete", "completed", "paid", "done", "delivered",
         "shipped", "sent", "finished", "resolved", "confirmed",
+        "payment", "payments", "made",
     ]
     metadata_signals = [
         "updated", "generated", "as of", "last ", "since ",
         "created", "logged", "recorded", "migrated", "status",
-        "prepared", "transfer", "received",
+        "prepared", "transfer", "received", "changes", "history",
+        "team changes", "account matrix",
     ]
 
     deadlines = []
