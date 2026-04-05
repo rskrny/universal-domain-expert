@@ -1,4 +1,4 @@
-# Session Handoff -- April 6, 2026 (Session 017)
+# Session Handoff -- April 6, 2026 (Session 018)
 
 > Resume point for next session. Read MEMORY.md first.
 
@@ -6,131 +6,118 @@
 
 ## What Was Done This Session
 
-### 1. Intelligence Briefing Phase 2 (Complete)
+### 1. Jarvis Orchestrator (Complete)
 
-**Actionable Recommendations:**
-- Every Reddit discovery now carries a recommendation: Implement, Watch, or Note
-- Implement: tool/resource matching strong project keywords. "Check if it fits your current stack."
-- Watch: relevant to a project but lower urgency. "Not immediately actionable."
-- Note: general industry signal. No project-specific action.
-- Ryan's feedback: "my natural question opening it is, should we implement any of this?" This answers that directly per item.
+Built the cognition layer: the missing bridge between perception and action.
 
-**Delta Engine:**
-- `state_tracker.py` now has `compute_deltas()` comparing current run vs `briefing_state.json`
-- New discoveries get full treatment. Returning items get condensed "Still relevant" section.
-- Card header shows "Changes: 3 new discovery(s)" or "No changes since last briefing" (green card)
-- System stats show deltas too (e.g. "chunks +50, queries +12")
+**Three-Layer Architecture:**
+```
+Layer 3: ACTION (Lark delivery, social posting)
+Layer 2: COGNITION (new this session)  <-- orchestrator/
+Layer 1: PERCEPTION (intelligence/)
+```
 
-**Reddit Scanner Expansion:**
-- New `theory_reasoning` category in `dashboard/reddit_scanner.py` and `scripts/subreddit_config.py`
-- Subreddits: QuantumComputing, InformationTheory, compsci, PhilosophyofScience, CognitiveScience, complexity, SystemsThinking, CategoryTheory
-- General interest keywords expanded: reasoning, ontology, bayesian, inference, entropy, emergence, cognition, causality, abstraction, meta-learning
-- Purpose: feed foundational theory into domain agent reasoning improvements
+**New modules in scripts/orchestrator/:**
+- `project_scanner.py` -- Parses all project_*.md into structured state. Detects: status (production/development/proposal/early/completed/meta), staleness, blockers, waiting items, deadlines, revenue signals.
+- `planner.py` -- Scores actions across 5 dimensions: time pressure, revenue impact, blocked state, staleness, opportunity cost. Produces ranked ActionItem list (priority 0-100).
+- `action_tracker.py` -- Records recommendations in state/action_log.json. Tracks pending/acted/stale status. Computes act rate by category. Feedback loop for weight calibration.
 
-**Cleanup:**
-- `reddit-daily-digest` scheduled task disabled (superseded by intelligence briefing)
+**Briefing Integration:**
+- Pipeline now has 6 steps (was 5). Steps 5-6: run orchestrator, record recommendations.
+- Briefing output leads with "Today's Focus" section showing top 3 actions.
+- Lark card includes action plan at top, before deadlines and discoveries.
+- Local markdown briefing also includes full plan with "Also on Radar" section.
 
-### 2. Neural Router (Complete)
+### 2. JARVIS_ROADMAP.md (Complete)
 
-Built and deployed `scripts/neural_router.py`. Semantic domain classification using the same all-MiniLM-L6-v2 model as the retrieval system.
+Persistent vision document tracking evolution from reactive domain expert to proactive autonomous assistant. Defines:
+- Three-layer model (Perception, Cognition, Action)
+- Layer-by-layer completion status with checkboxes
+- Five milestone targets (M1-M5)
+- Metrics table for tracking progress
+- Five architectural principles
 
-**Architecture:**
-- Offline training: embeds 78 domain files + 27 cleaned routing log examples into 384-dim centroids
-- Online inference: numpy-only word-vector averaging. <10ms inference, no torch loading.
-- Hybrid scoring in `route_hook.py`: neural_score * 5.0 + keyword_score when neural confidence >= 1.3
-- Graceful fallback: if neural artifacts missing or confidence low, keyword-only
-- Validated at 76.9% accuracy on routing log. All mismatches had low confidence (correct fallback).
+### 3. GitHub Remote (Complete)
 
-**Files:**
-- `scripts/neural_router.py` -- train/test/validate/stats CLI
-- `state/neural_router/` -- centroids.npy, word_vectors.npy, vocabulary.json, domain_index.json, meta.json
-- `scripts/route_hook.py` -- hybrid integration added
-
-**Commands:**
-- Train: `python scripts/neural_router.py train` (~15 seconds)
-- Test: `python scripts/neural_router.py test "query"`
-- Validate: `python scripts/neural_router.py validate`
-- Retrain after: adding domains, accumulating 50+ more log entries, or running retrieval index
-
-### 3. Memory Corrections (Complete)
-
-- Pepper PP-001: marked confirmed received by Pepper (Apr 6)
-- Sullivan SEO: corrected direction. Ryan asked Marianne what it's worth to HER. Waiting on reply.
-- Bloodline gallery: corrected. Original photos intact. Only captain-uploaded photos lost. Not critical.
-- Gesedge site: flagged for redesign. AI patterns too obvious. Fake testimonials removed from requirements. All images must be generated.
-- New feedback saved: `feedback_no_fake_content.md`, `feedback_ai_site_patterns.md`
+- Added origin: https://github.com/rskrny/universal-domain-expert.git
+- Pushed master branch (13 commits) to remote
+- Both main (1 old commit) and master (all development) exist on GitHub
+- All work is now backed up
 
 ---
 
 ## System State (Verified)
 
-- **Git:** master branch, 6 commits this session, working tree clean
-- **Neural router:** Trained, 78 domains, 4677 word vocabulary, hybrid scoring active
-- **Intelligence briefing:** Phase 2 complete. Recommendations + delta engine working.
-- **Lark delivery:** Verified previous session. Card format with recommendations pending live test.
-- **Index:** 11,487 chunks, 78 domains (unchanged this session)
-- **Routing log:** 134+ queries (44 routed)
-- **Memory:** 36 files (added 2 feedback files)
-- **Scheduled tasks:** daily-briefing active, reddit-daily-digest disabled
+- **Git:** master branch, origin configured and pushed, working tree clean
+- **Neural router:** Trained, 78 domains, hybrid scoring active
+- **Orchestrator:** Operational, 8 initial recommendations logged
+- **Intelligence briefing:** Phase 2 + orchestrator integration working
+- **Lark delivery:** Card format with action plan section added
+- **Index:** 11,487 chunks, 78 domains
+- **Routing log:** 145+ queries (50 routed)
+- **Memory:** 36 files
+- **Action log:** 8 entries (all pending, act rate TBD)
+- **Scheduled tasks:** daily-briefing active
 
 ---
 
 ## Known Issues
 
-1. **No GitHub remote configured.** All commits are local only. Need to set up remote for PR workflow. Ryan saw a "Create PR" button (likely GitHub Desktop or VS Code), but git has no origin.
+1. **Deadline detection noise.** The project_scanner picks up some metadata dates as deadlines (e.g., "Team Changes (2026-04-03)" matches because "Joining" is a deadline signal). Needs context-aware filtering.
 
-2. **50 of 78 domains have zero context files.** Knowledge quality uneven across domains.
+2. **50 of 78 domains have zero context files.** Knowledge quality uneven.
 
-3. **Remote Trigger API returns 401.** Not blocking.
+3. **main vs master branches on GitHub.** Remote has both. Should consolidate eventually.
 
-4. **Neural router word-vector averaging has limitations.** Compound concepts like "Cloudflare Workers" lose meaning when split into individual words. The hybrid keyword system compensates.
+4. **Neural router word-vector averaging limitations.** Compound concepts split into individual words. Hybrid keyword system compensates.
 
 ---
 
 ## Next Session Priorities
 
-### Ready to Use (Ryan wants to start using the system on real work)
-- [ ] Sullivan NH Tax Deed proposal review (Ryan wants to verify promises are deliverable). May be today or tomorrow.
+### Use the System (Ryan wants to start using it on real work)
+- [ ] Sullivan NH Tax Deed proposal review
 - [ ] PP-002 execution (scheduled week of Apr 7)
-- [ ] Use the domain expert routing on actual project work
+- [ ] Use @route on actual project work to test the full pipeline
 
-### System Improvements
-- [ ] Set up GitHub remote for PR workflow
-- [ ] Gesedge site redesign (break AI patterns, generate images, remove fake testimonials, audit all content for accuracy)
-- [ ] Generated dashboard (HTML file, not React app) for intelligence layer
-- [ ] Phase 2 wishlist: Brain Feed input loop, YouTube transcript analysis, calendar, email, Instagram, real-time alerts, PWA push
+### Jarvis M2: Session Intelligence
+- [ ] Make orchestrator run at session start automatically
+- [ ] Present today's plan as the first thing Ryan sees (no manual bootstrap needed)
+- [ ] Improve deadline detection to reduce false positives
 
-### Maintenance
-- [ ] Retrain neural router after accumulating more routing log entries
-- [ ] Bloodline git cleanup (200+ deleted files unstaged in that repo)
-- [ ] Bloodline hero image investigation (Ryan unsure if issue is real)
-- [ ] Tax 2025: MUST MAIL BY JUN 15 2026. Forms ready. Print, sign, certified mail to Charlotte NC.
+### System Quality
+- [ ] Fill context for most-used domains (real-estate, negotiation, sales, video-production, saas-building)
+- [ ] Retrain neural router (routing log now at 145+ entries, was trained on 27)
+- [ ] Consolidate main/master branches on GitHub
+
+### Jarvis M3+ (Stretch)
+- [ ] Email read access investigation
+- [ ] Communication pattern tracking
+- [ ] Priority weight learning from action tracker data
 
 ---
 
-## Key Files Modified This Session
+## Key Files Created/Modified This Session
 
 ```
-scripts/neural_router.py               -- Created (neural router core)
-scripts/route_hook.py                   -- Modified (hybrid neural + keyword scoring)
-scripts/intelligence/reddit_matcher.py  -- Modified (recommendations + theory keywords)
-scripts/intelligence/lark_cards.py      -- Modified (recommendation display + delta sections)
-scripts/intelligence/state_tracker.py   -- Modified (delta computation engine)
-scripts/intelligence/briefing.py        -- Modified (delta integration, step numbering)
-dashboard/reddit_scanner.py             -- Modified (theory_reasoning subreddit category)
-scripts/subreddit_config.py             -- Modified (foundational theory subs + scan targets)
-.gitignore                              -- Modified (neural router .npy artifacts)
-state/neural_router/                    -- Created (training artifacts)
-memory/feedback_no_fake_content.md      -- Created
-memory/feedback_ai_site_patterns.md     -- Created
+scripts/orchestrator/__init__.py        -- Created (module overview)
+scripts/orchestrator/project_scanner.py -- Created (deep project state reader)
+scripts/orchestrator/planner.py         -- Created (daily action planner)
+scripts/orchestrator/action_tracker.py  -- Created (recommendation tracking)
+scripts/intelligence/briefing.py        -- Modified (orchestrator integration, 6 steps)
+scripts/intelligence/lark_cards.py      -- Modified (action plan card section)
+ARCHITECTURE.md                         -- Modified (orchestrator docs, capability #5)
+JARVIS_ROADMAP.md                       -- Created (3-layer vision + milestones)
+state/action_log.json                   -- Created (recommendation tracking data)
 ```
 
 ---
 
 ## Resume Instructions
 
-1. Read this handoff. Ask Ryan what he wants to work on.
-2. The system is ready for real project work with @route prefix for full pipeline.
-3. No @route = fast casual mode. @route = domain expert pipeline with neural + keyword classification.
-4. If Sullivan work starts, read `project_sullivan_status.md` carefully. Names are Sager, not Sullivan.
-5. If gesedge work starts, read `feedback_no_fake_content.md` and `feedback_ai_site_patterns.md` first.
+1. Read this handoff. The orchestrator is operational.
+2. Run `python -m scripts.orchestrator.planner` to see today's action plan.
+3. The briefing pipeline now includes the orchestrator. Run with `python -m scripts.intelligence.briefing --no-lark` to test locally.
+4. JARVIS_ROADMAP.md has the full vision and next milestones.
+5. Git is now connected to GitHub. Push after commits.
+6. If working on Sullivan, read `project_sullivan_status.md`. Names are Sager, not Sullivan.
