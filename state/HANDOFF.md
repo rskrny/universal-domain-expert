@@ -58,15 +58,31 @@
 
 ---
 
-## Known Issues (Not Fixed This Session)
+### 8. Remaining Issues Fixed (Round 2)
 
-1. **Remote Trigger auth expired.** API returns 401. Flip Side D1 writes broken since Mar 31. Fix: re-authenticate via claude.ai remote trigger settings. User action required.
+**Daily briefing false positives (FIXED):**
+- Root cause: skip_patterns used text-position `idx` as index into `context_raw` (different offset)
+- Added positive deadline signal filter: only dates near "must", "due", "expires" etc. count
+- Result: 4 false positive entries eliminated, clean output
 
-2. **Daily briefing false positive deadlines.** extract_deadlines() picks up metadata dates (e.g., "Updated 2026-04-05") as real deadlines. The skip_patterns filter has a position indexing bug (uses text-relative idx on context_raw substring). Low priority.
+**Flip Side D1 writes (FIXED via workaround):**
+- Remote Trigger API returns 401 (auth expired, no way to re-auth from settings UI)
+- Fix: updated local daily-briefing scheduled task to include D1 INSERT step directly
+- D1 database: 961c5503-b1fc-4047-8a20-6885eb70265b, 12 rows (Mar 26-Apr 3)
+- Task needs one manual run to pre-approve MCP tool permissions for future automated runs
 
-3. **50 of 78 domains have zero context files.** Knowledge quality is uneven. AI/ML has 21 context files. Most engineering, law, and science domains have zero. The retrieval system works but returns nothing for underpopulated domains.
+**Knowledge-graph.html (FIXED):**
+- Root cause: embedded full text of all 11,487 chunks into HTML
+- Fix: capped full_texts at 1000 chars with "..." truncation
+- Will reduce file size from ~12.5MB to ~4-5MB on next `python -m retrieval viz`
 
-4. **12.5MB knowledge-graph.html.** Visualization file is oversized. Consider lazy-loading or chunking.
+---
+
+## Known Issues (Remaining)
+
+1. **50 of 78 domains have zero context files.** Knowledge quality is uneven. AI/ML has 21 context files. Most engineering, law, and science domains have zero. The retrieval system works but returns nothing for underpopulated domains. Fix: run knowledge pipeline (`python scripts/ingest.py pipeline`) regularly.
+
+2. **Remote Trigger API returns 401.** Cannot manage remote triggers from Claude Code. Not blocking anything now that daily-briefing task handles D1 writes locally. May affect future automation that requires server-side scheduled execution.
 
 ---
 
