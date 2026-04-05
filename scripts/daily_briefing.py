@@ -99,9 +99,16 @@ def extract_deadlines() -> list:
                 d = datetime.strptime(date_str, "%Y-%m-%d").date()
                 days_away = (d - today).days
                 if 0 <= days_away <= 30:
-                    # Find context around the date
+                    # Find context around the date (word-boundary safe)
                     idx = text.find(date_str)
-                    context_raw = text[max(0, idx - 100):idx + len(date_str) + 100].strip()
+                    start = max(0, idx - 100)
+                    end = min(len(text), idx + len(date_str) + 100)
+                    # Expand start to nearest word boundary
+                    while start > 0 and text[start] not in (" ", "\n", "\t"):
+                        start += 1
+                    context_raw = text[start:end].strip()
+                    # Remove the date itself since it displays separately
+                    context_raw = context_raw.replace(date_str, "").strip()
                     context = " ".join(context_raw.split())[:150]
 
                     # Skip metadata dates (updated, generated, etc.)

@@ -12,6 +12,9 @@ retrieval/knowledge-graph.html
 # Binaries
 *.exe
 
+# Misplaced project files (should live in their own project directory)
+FinModel AI-financial-model.xlsx
+
 # IDE / Editor
 .vscode/
 .idea/

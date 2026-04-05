@@ -1,4 +1,4 @@
-# Session Handoff -- April 6, 2026
+# Session Handoff -- April 6, 2026 (Session 015)
 
 > Resume point for next session. Read MEMORY.md first.
 
@@ -6,97 +6,100 @@
 
 ## What Was Done This Session
 
-### 1. Token Efficiency Audit (Reddit post deep-dive)
-- Fetched u/Medium_Island_2795's r/ClaudeCode post via Reddit API (858 sessions, $1,619 spend analysis)
-- Cloned Claudest repo (github.com/gupsammy/Claudest) to /tmp/Claudest
-- Ran claude-memory token auditor against 512 local session files (258 parsed, 27 with data)
-- Results: 360 turns, $24.62 estimated spend, 95% cache ratio (vs post author's 46%)
-- Dashboard deployed to ~/.claude-memory/dashboard.html (required UTF-8 encoding fix)
-- SQLite DB at ~/.claude-memory/conversations.db (1.9MB)
+### 1. Full Systems Audit
+- Audited all workspace layers: memory (33 files), settings (167 allow entries found), state (3 stale files), ARCHITECTURE.md, ROUTER.md, social/ dir, project root
+- Identified 14 concrete issues. Fixed 10 this session. Documented remaining 4.
+- Corrected 2 audit findings mid-session (social/ has real code, education domains are intentionally split)
 
-### 2. ENABLE_TOOL_SEARCH Applied
-- Added to ~/.claude/settings.json: `"env": {"ENABLE_TOOL_SEARCH": "true"}`
-- Saves ~14k tokens/turn by deferring tool schema loading
-- THIS IS THE FIRST SESSION WITH THIS SETTING. Verify it works.
+### 2. Git Repository Initialized
+- Created .gitignore (excludes retrieval/store/, *.exe, knowledge-graph.html, xlsx)
+- Baseline commit: 327 files tracked
+- All future sessions have rollback capability
 
-### 3. CLAUDE.md Restructured (Major)
-- 573 lines / ~5,647 tokens -> 158 lines / ~2,100 tokens (63% reduction)
-- Removed: System Architecture tree, Knowledge Retrieval docs, MCP Setup, Three-Layer Architecture, 78-row Available Domains table, Creating New Domains checklist, LLM Platforms, Daily Briefing details, Project Knowledge Base
-- Domain lookup now points to prompts/ROUTER.md (table was redundant)
-- All removed content already exists in ARCHITECTURE.md
+### 3. Allow-List Rebuilt (Critical Fix)
+- settings.local.json: 167 accumulated entries -> 36 wildcard patterns
+- Previous session claimed this was done (HANDOFF said "162 -> 36") but it was applied to global settings.json, not project-level settings.local.json
+- Added memory note warning about settings.local.json accumulation pattern
 
-### 4. Memory Files Consolidated (Major)
-- 46 files -> 31 files (15 deleted: 9 merged, 6 stale)
-- 5 overlap clusters merged into single files:
-  - IRS PDF: 2->1 (feedback_irs_pdf_filling.md)
-  - Hardware: 3->1 (user_hardware.md includes GPU rules and no-parallel rule)
-  - Lark/Brain Feed: 3->1 (reference_brainfeed_bot.md is single Lark reference)
-  - Domain expert system: 3->1 (project_domain_expert_system.md includes pipeline + dashboard)
-  - Flip Side: 3->1 (project_flipside_status.md has call history section)
-- All call transcript details preserved in merged files. Zero information loss.
-- MEMORY.md: 31 entries, all links verified valid
+### 4. Memory Accuracy Fixes
+- user_profile.md: Updated from 6 projects to 11 with correct details
+- project_domain_expert_system.md: Updated D1 write failure to specific root cause (RemoteTrigger API returns 401, requires re-auth, not a code bug)
+- feedback_workspace_optimization.md: Updated file counts and added settings.local.json drift warning
 
-### 5. Permission Allow-List Collapsed
-- 162 entries -> 36 entries (78% reduction)
-- 81 SSH/SCP commands -> 2 wildcard patterns
-- 33 WebFetch domains -> 9 actively used
+### 5. ARCHITECTURE.md Reconciled
+- "74 disciplines" -> "78 disciplines" (matches actual domain file count)
+- "8,500+ chunks across 340+ files" -> "11,487 chunks across 590+ files" (matches retrieval stats)
+- "Last verified" date updated to April 6
 
-### 6. Error Rate Audit
-- Overall: 8.1% (311/3831 tool calls)
-- Critical finding: 53 Read errors where file_path parameter was hallucinated (context overload signal)
-- WebFetch: 28.7% (external failures, not workspace)
-- MCP tools: 3.8% (clean)
+### 6. Daily Briefing Bug Fixed
+- scripts/daily_briefing.py: extract_deadlines() was slicing text mid-word
+- Root cause: `text[idx - 100:]` started mid-word, then `[:80]` truncation produced garbled output like "ared 2026-03-30)"
+- Fix: expand window start to nearest word boundary before extracting context
+
+### 7. Project Root Cleaned
+- Removed empty config.yml (was `{}`)
+- Added FinModel xlsx to .gitignore (doesn't belong in knowledge system repo)
+- Confirmed Dockerfile and fly.toml are functional (dashboard deployment config)
 
 ---
 
-## System State
+## System State (Verified)
 
-- CLAUDE.md: 158 lines, runtime-only content
-- Memory: 31 files, zero dead links, organized by type
-- Allow-list: 36 entries with wildcard patterns
-- ENABLE_TOOL_SEARCH: ON (new)
-- Index: 11,487 chunks, 78 domains (unchanged)
-- Estimated per-turn savings: ~19,500 tokens
+- **Git:** Initialized. Baseline + fixes committed.
+- **CLAUDE.md:** 158 lines (unchanged from last session)
+- **Memory:** 33 files, all links valid, user_profile.md corrected
+- **Allow-list:** 36 entries with wildcard patterns (settings.local.json)
+- **ENABLE_TOOL_SEARCH:** ON (second session with this setting, working correctly)
+- **Index:** 11,487 chunks, 78 domains, 84 canonical domain categories
+- **State files:** SESSION_CONTEXT.md and daily_briefing.md regenerated
+- **ROUTER.md:** 78 entries, matches filesystem exactly
+- **Social engine:** 5 Python source files confirmed (was incorrectly flagged as empty)
+- **Education domains:** 2 files (education.md + education-pedagogy.md) are intentionally split (institutional vs pedagogical)
+
+---
+
+## Known Issues (Not Fixed This Session)
+
+1. **Remote Trigger auth expired.** API returns 401. Flip Side D1 writes broken since Mar 31. Fix: re-authenticate via claude.ai remote trigger settings. User action required.
+
+2. **Daily briefing false positive deadlines.** extract_deadlines() picks up metadata dates (e.g., "Updated 2026-04-05") as real deadlines. The skip_patterns filter has a position indexing bug (uses text-relative idx on context_raw substring). Low priority.
+
+3. **50 of 78 domains have zero context files.** Knowledge quality is uneven. AI/ML has 21 context files. Most engineering, law, and science domains have zero. The retrieval system works but returns nothing for underpopulated domains.
+
+4. **12.5MB knowledge-graph.html.** Visualization file is oversized. Consider lazy-loading or chunking.
 
 ---
 
 ## Pending / Next Session
 
-### Verify Optimization
-- [ ] Run /context to check starting token count (should be ~25k, was ~45k)
-- [ ] If tool-not-found errors appear, ENABLE_TOOL_SEARCH may need tuning
-- [ ] Re-run token auditor in 2 weeks: `python3 /tmp/Claudest/.../ingest_token_data.py` (or re-clone if /tmp cleaned)
-
-### From Prior Session (Still Pending)
+### From Prior Sessions (Still Open)
 - [ ] Gesedge: Deploy to Vercel, replace placeholders
 - [ ] Sullivan: Ryan sends proposal PDF + mockup to Marianne
 - [ ] Goldie: Waiting on Kenny procurement + Sal email categories
-- [ ] Tax 2025: MUST MAIL BY JUN 15. Print, sign, certified mail to Charlotte NC
-- [ ] Bloodline: Git cleanup (200+ deleted files) and gallery re-upload
+- [ ] Tax 2025: MUST MAIL BY JUN 15 2026. Print, sign, certified mail to Charlotte NC
+- [ ] Bloodline: Git cleanup (200+ deleted files) and gallery re-upload (78 photos)
 - [ ] LinkedIn: Post 1 ready, 5 more planned. Token expires ~June 2026
-- [ ] Flip Side: Apr 7 meeting happened (or not). Check status.
 - [ ] Pepper: PP-002 was scheduled week of Apr 7
 
 ### System Maintenance
+- [ ] Fix Remote Trigger auth (user action: re-auth at claude.ai)
+- [ ] Fix deadline false positives in daily_briefing.py (idx offset bug)
 - [ ] Run knowledge pipeline: `python scripts/ingest.py pipeline`
-- [ ] Update user_profile.md: says 6 projects, actually 11
-- [ ] Consider training neural router (100+ routing log entries)
+- [ ] Consider neural router training (122+ routing log entries, threshold was 50)
 
 ---
 
 ## Key Files Modified This Session
 
 ```
-~/.claude/settings.json                           -- Added ENABLE_TOOL_SEARCH, collapsed allow-list
-CLAUDE.md                                         -- Restructured (573->158 lines)
-memory/MEMORY.md                                  -- Rebuilt index (47->31 entries)
-memory/user_hardware.md                           -- Merged from 3 files
-memory/feedback_irs_pdf_filling.md                -- Merged from 2 files
-memory/reference_brainfeed_bot.md                 -- Merged from 3 files
-memory/project_domain_expert_system.md            -- Merged from 3 files
-memory/project_flipside_status.md                 -- Merged from 3 files (call history added)
-state/reddit_post_output.txt                      -- Captured Reddit post for reference
-~/.claude-memory/conversations.db                 -- Token auditor database
-~/.claude-memory/dashboard.html                   -- Token insights dashboard
-scripts/fetch_reddit_post.py                      -- Reusable Reddit API fetcher
+.gitignore                              -- Created (new repo)
+.claude/settings.local.json             -- Rebuilt allow-list (167 -> 36 entries)
+ARCHITECTURE.md                         -- Fixed stale numbers (74->78 domains, 8500->11487 chunks)
+scripts/daily_briefing.py               -- Fixed word-boundary truncation bug
+state/SESSION_CONTEXT.md                -- Regenerated
+state/daily_briefing.md                 -- Regenerated (with bug fix applied)
+config.yml                              -- Deleted (was empty)
+memory/user_profile.md                  -- Fixed project count (6 -> 11)
+memory/project_domain_expert_system.md  -- Updated D1 failure root cause
+memory/feedback_workspace_optimization.md -- Updated counts, added drift warning
 ```

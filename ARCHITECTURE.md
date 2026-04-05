@@ -2,21 +2,21 @@
 
 > Source of truth for the system's structure.
 > Read this before modifying any module. Update it when you add or change components.
-> Last verified: April 5, 2026.
+> Last verified: April 6, 2026.
 
 ---
 
 ## System Overview
 
 This is a knowledge operating system that turns Claude Code into a domain expert
-across 74 professional disciplines. It combines prompt engineering, hybrid retrieval,
+across 78 professional disciplines. It combines prompt engineering, hybrid retrieval,
 self-evaluating feedback, and external integrations into a single portable system.
 
 Four capabilities, one sentence each:
 
 1. **Expert routing.** Classify any request by domain and complexity, load only
    the expertise needed, execute through a structured pipeline.
-2. **Knowledge retrieval.** Search 8,500+ enriched chunks across 340+ files using
+2. **Knowledge retrieval.** Search 11,487 enriched chunks across 590+ files using
    BM25, semantic search, and HyDE with token budget optimization.
 3. **Self-improving retrieval.** The system generates ground-truth queries from chunk
    metadata, tests its own recall, and records automatic feedback to boost good
